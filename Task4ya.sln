@@ -1,8 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taskf4ya.Domain", "Taskf4ya.Domain\Taskf4ya.Domain.csproj", "{AA6BF30F-D7E6-4D72-89CB-CCF67B44513B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task4ya.Domain", "Task4ya.Domain\Task4ya.Domain.csproj", "{AA6BF30F-D7E6-4D72-89CB-CCF67B44513B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task4ya.Application", "Task4ya.Application\Task4ya.Application.csproj", "{32CDAFC6-DA13-4A12-BB79-D1159B9CC297}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task4ya.Infrastructure", "Task4ya.Infrastructure\Task4ya.Infrastructure.csproj", "{614F1C7E-C2E3-44EE-BE37-D37F2B539239}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +20,9 @@ Global
 		{32CDAFC6-DA13-4A12-BB79-D1159B9CC297}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32CDAFC6-DA13-4A12-BB79-D1159B9CC297}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32CDAFC6-DA13-4A12-BB79-D1159B9CC297}.Release|Any CPU.Build.0 = Release|Any CPU
+		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

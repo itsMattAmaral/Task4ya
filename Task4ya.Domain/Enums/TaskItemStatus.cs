@@ -1,4 +1,4 @@
-namespace Taskf4ya.Domain.Enums;
+namespace Task4ya.Domain.Enums;
 
 public enum TaskItemStatus
 {

@@ -1,4 +1,4 @@
-namespace Taskf4ya.Domain.Utils;
+namespace Task4ya.Domain.Utils;
 
 public static class StringValidator
 {

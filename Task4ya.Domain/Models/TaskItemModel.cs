@@ -1,6 +1,6 @@
-using Taskf4ya.Domain.Enums;
+using Task4ya.Domain.Enums;
 
-namespace Taskf4ya.Domain.Models;
+namespace Task4ya.Domain.Models;
 
 public class TaskItemModel
 {
