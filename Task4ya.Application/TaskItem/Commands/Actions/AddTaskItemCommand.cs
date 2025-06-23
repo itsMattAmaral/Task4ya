@@ -6,13 +6,9 @@ namespace Task4ya.Application.TaskItem.Commands.Actions;
 
 public class AddTaskItemCommand : IRequest<TaskItemDto>
 {
-	public required string Title { get; init; }
-	public string? Description { get; init; }
-	public DateTime? DueDate { get; init; }
-	
-	public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-	
-	public DateTime UpdatedAt { get; init; } = DateTime.UtcNow;
+	public string Title { get; }
+	public string? Description { get; }
+	public DateTime? DueDate { get; }
 	
 	public TaskItemStatus Status { get; init; }
 	public TaskItemPriority Priority { get; init; }

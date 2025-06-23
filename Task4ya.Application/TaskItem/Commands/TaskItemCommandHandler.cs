@@ -1,5 +1,6 @@
 using MediatR;
 using Task4ya.Application.Dtos;
+using Task4ya.Application.Mappers;
 using Task4ya.Application.TaskItem.Commands.Actions;
 using Task4ya.Infrastructure.Data;
 
@@ -18,20 +19,12 @@ public class TaskItemCommandHandler : IRequestHandler<AddTaskItemCommand, TaskIt
 		var newTask = new Domain.Entities.TaskItem(
 			request.Title,
 			request.Description,
-			request.DueDate
+			request.DueDate,
+			request.Priority,
+			request.Status
 		);
 		_dbcontext.Add(newTask);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
-		return new TaskItemDto
-		{
-			Id = newTask.Id,
-			Title = newTask.Title,
-			Description = newTask.Description,
-			DueDate = newTask.DueDate,
-			Status = newTask.Status,
-			Priority = newTask.Priority,
-			CreatedAt = newTask.CreatedAt,
-			UpdatedAt = newTask.UpdatedAt
-		};
+		return newTask.MapToDto();
 	}
 }
