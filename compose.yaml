@@ -1,16 +1,24 @@
 ﻿services:
-  postgres:
-    image: postgres:16
-    container_name: Task4ya.Postgres
-    restart: unless-stopped
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-       - pgdata:/var/lib/postgresql/data
+    task4ya:
+        image: task4ya/task4ya:latest
+        container_name: Task4ya.App
+        restart: unless-stopped
+        ports:
+        - "8080:8080"
+        depends_on:
+        - postgres
+    postgres:
+      image: postgres:16
+      container_name: Task4ya.Postgres
+      restart: unless-stopped
+      ports:
+        - "5432:5432"
+      environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+      volumes:
+         - pgdata:/var/lib/postgresql/data
 
 volumes:
   pgdata:
