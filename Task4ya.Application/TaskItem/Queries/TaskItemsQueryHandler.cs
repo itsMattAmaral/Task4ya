@@ -6,7 +6,7 @@ using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Application.TaskItem.Queries;
 
-public class TaskItemsQueryHandler : IRequestHandler<GetAllTaskItemsQuery, IEnumerable<TaskItemDto>>
+public class TaskItemsQueryHandler : IRequestHandler<GetAllTaskItemsQuery, IEnumerable<TaskItemDto>>, IRequestHandler<GetTaskItemByIdQuery, TaskItemDto>
 {
 	private readonly Task4YaDbContext _dbcontext;
 
