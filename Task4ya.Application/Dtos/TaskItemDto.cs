@@ -4,10 +4,10 @@ namespace Task4ya.Application.Dtos;
 
 public class TaskItemDto
 {
-	public int Id { get; set; }
-	public required string Title { get; set; }
-	public string? Description { get; set; }
-	public DateTime? DueDate { get; set; }
+	public int Id { get; init; }
+	public required string Title { get; init; }
+	public string? Description { get; init; }
+	public DateTime? DueDate { get; init; }
 	public TaskItemStatus Status { get; set; }
 	public TaskItemPriority Priority { get; set; }
 }

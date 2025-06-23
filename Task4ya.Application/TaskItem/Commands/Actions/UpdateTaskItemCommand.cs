@@ -4,17 +4,18 @@ using Task4ya.Domain.Enums;
 
 namespace Task4ya.Application.TaskItem.Commands.Actions;
 
-public record AddTaskItemCommand : IRequest<TaskItemDto>
+public record UpdateTaskItemCommand : IRequest<TaskItemDto>
 {
-	public string Title { get; }
+	public int Id { get; init; }
+	public string? Title { get; }
 	public string? Description { get; }
 	public DateTime? DueDate { get; }
 	
 	public TaskItemStatus Status { get; init; }
 	public TaskItemPriority Priority { get; init; }
 
-	public AddTaskItemCommand(
-		string title,
+	public UpdateTaskItemCommand(
+		string? title = null,
 		string? description = null,
 		DateTime? dueDate = null,
 		TaskItemPriority priority = TaskItemPriority.Medium,

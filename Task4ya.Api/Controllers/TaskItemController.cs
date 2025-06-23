@@ -34,7 +34,25 @@ public class TaskItemController : ControllerBase
 	[HttpGet("{id}")]
 	public async Task<ActionResult<TaskItemDto>> GetTaskItemById(int id)
 	{
+		if (id <= 0)
+		{
+			return BadRequest("Invalid task item ID.");
+		}
+		
 		var result = await _mediator.Send(new GetTaskItemByIdQuery(id));
+		return Ok(result);
+	}
+	
+	[HttpPut("{id}")]
+	public async Task<ActionResult<TaskItemDto>> UpdateTaskItem(int id, [FromBody] UpdateTaskItemCommand command)
+	{
+		if (id != command.Id && command.Id != 0)
+		{
+			return BadRequest("Invalid task item ID.");
+		}
+		
+		var updatedCommand = command with { Id = id };
+		var result = await _mediator.Send(updatedCommand);
 		return Ok(result);
 	}
 }

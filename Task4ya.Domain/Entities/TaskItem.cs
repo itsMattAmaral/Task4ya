@@ -23,17 +23,24 @@ public class TaskItem
 		Status = status;
 		Priority = priority;
 	}
+	
+	public void UpdateTaskItem(string? newTitle = null, string? newDescription = null, DateTime? newDueDate = null, TaskItemPriority? newPriority = null, TaskItemStatus? newStatus = null)
+	{
+		if (newTitle is not null) UpdateTaskTitle(newTitle);
+		if (newDescription is not null) UpdateTaskDescription(newDescription);
+		if (newDueDate is not null) UpdateDueDate(newDueDate);
+		if (newPriority is not null) UpdatePriority(newPriority.Value);
+		if (newStatus is not null) UpdateStatus(newStatus.Value);
+	}
 
 	public void UpdateTaskTitle(string newTitle)
 	{
-		StringValidator.ThrowIfNullOrWhiteSpace(newTitle, "Title");
 		Title = newTitle;
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
 	public void UpdateTaskDescription(string? newDescription)
 	{
-		StringValidator.ThrowIfNullOrWhiteSpace(newDescription, "Description");
 		Description = newDescription;
 		UpdatedAt = DateTime.UtcNow;
 	}
@@ -46,12 +53,22 @@ public class TaskItem
 	
 	public void UpdateStatus(TaskItemStatus newStatus)
 	{
+		var validStatuses = Enum.GetValues<TaskItemStatus>();
+		if (!validStatuses.Contains(newStatus))
+		{
+			throw new ArgumentException($"Invalid status: {newStatus}. Valid statuses are: {string.Join(", ", validStatuses)}");
+		}
 		Status = newStatus;
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
 	public void UpdatePriority(TaskItemPriority newPriority)
 	{
+		var validPriorities = Enum.GetValues<TaskItemPriority>();
+		if (!validPriorities.Contains(newPriority))
+		{
+			throw new ArgumentException($"Invalid priority: {newPriority}. Valid priorities are: {string.Join(", ", validPriorities)}");
+		}
 		Priority = newPriority;
 		UpdatedAt = DateTime.UtcNow;
 	}
