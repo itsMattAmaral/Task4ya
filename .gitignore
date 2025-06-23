@@ -3,3 +3,10 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+.env
+# Rider specific files
+.idea/
+# Visual Studio Code specific files
+.vscode/
+# Visual Studio specific files
+.vs/

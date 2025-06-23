@@ -6,6 +6,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task4ya.Application", "Task
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task4ya.Infrastructure", "Task4ya.Infrastructure\Task4ya.Infrastructure.csproj", "{614F1C7E-C2E3-44EE-BE37-D37F2B539239}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task4ya.Api", "Task4ya.Api\Task4ya.Api.csproj", "{68E017A9-D127-4D54-9986-5C50EFC4A592}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{62608C55-3872-4E23-A7DE-3BFBDE68B121}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +31,9 @@ Global
 		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{614F1C7E-C2E3-44EE-BE37-D37F2B539239}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68E017A9-D127-4D54-9986-5C50EFC4A592}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68E017A9-D127-4D54-9986-5C50EFC4A592}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68E017A9-D127-4D54-9986-5C50EFC4A592}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68E017A9-D127-4D54-9986-5C50EFC4A592}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
