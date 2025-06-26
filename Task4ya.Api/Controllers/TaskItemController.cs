@@ -1,3 +1,4 @@
+using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Task4ya.Api.Models.TaskItem;
@@ -19,6 +20,10 @@ public class TaskItemController : ControllerBase
 	}
 
 	[HttpPost]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.Created)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemCommand command)
 	{
 		var result = await _mediator.Send(command);
@@ -26,6 +31,10 @@ public class TaskItemController : ControllerBase
 	}
 
 	[HttpGet]
+	[ProducesResponseType(typeof(IEnumerable<TaskItemDto>), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult<IEnumerable<TaskItemDto>>> GetAllTaskItems()
 	{
 		var result = await _mediator.Send(new GetAllTaskItemsQuery());
@@ -33,6 +42,10 @@ public class TaskItemController : ControllerBase
 	}
 
 	[HttpGet("{id}")]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult<TaskItemDto>> GetTaskItemById(int id)
 	{
 		if (id <= 0)
@@ -45,6 +58,10 @@ public class TaskItemController : ControllerBase
 	}
 	
 	[HttpPut("{id}")]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult> UpdateTaskItem([FromRoute]int id, [FromBody] UpdateTaskItemModel model)
 	{
         ArgumentNullException.ThrowIfNull(model);
@@ -55,6 +72,10 @@ public class TaskItemController : ControllerBase
 	}
 	
 	[HttpDelete("{id}")]
+	[ProducesResponseType((int)HttpStatusCode.NoContent)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult> DeleteTaskItem([FromRoute] int id, CancellationToken cancellationToken = default)
 	{
 		var command = new DeleteTaskItemCommand(id);
