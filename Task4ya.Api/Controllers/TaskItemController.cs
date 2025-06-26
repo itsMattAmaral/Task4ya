@@ -35,9 +35,15 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<IEnumerable<TaskItemDto>>> GetAllTaskItems()
+	public async Task<ActionResult<PagedResponseDto<TaskItemDto>>> GetAllTaskItems(
+		[FromQuery] int page = 1, 
+		[FromQuery] int pageSize = 10, 
+		[FromQuery] string? searchTerm = null, 
+		[FromQuery] string? sortBy = null, 
+		[FromQuery] bool sortDescending = false)
 	{
-		var result = await _mediator.Send(new GetAllTaskItemsQuery());
+		var query = new GetAllTaskItemsQuery(page, pageSize, searchTerm, sortBy, sortDescending);
+		var result = await _mediator.Send(query);
 		return Ok(result);
 	}
 
