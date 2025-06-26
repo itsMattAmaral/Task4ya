@@ -71,6 +71,33 @@ public class TaskItemController : ControllerBase
 		return Ok(result);
 	}
 	
+	[HttpPatch("{id}/status")]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult> UpdateTaskStatus([FromRoute] int id, [FromBody] UpdateTaskStatusModel model, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(model);
+		var command = model.GetCommand(id);
+		var result = await _mediator.Send(command, cancellationToken);
+		return Ok(result);
+	}
+
+	[HttpPatch("{id}/priority")]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult> UpdateTaskPriority([FromRoute] int id, [FromBody] UpdateTaskPriorityModel model,
+		CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(model);
+		var command = model.GetCommand(id);
+		var result = await _mediator.Send(command, cancellationToken);
+		return Ok(result);
+	}
+	
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
