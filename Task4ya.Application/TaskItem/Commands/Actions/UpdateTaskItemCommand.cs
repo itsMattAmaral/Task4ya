@@ -6,7 +6,7 @@ namespace Task4ya.Application.TaskItem.Commands.Actions;
 
 public record UpdateTaskItemCommand : IRequest<TaskItemDto>
 {
-	public int Id { get; init; }
+	public int Id { get; set; }
 	public string? Title { get; }
 	public string? Description { get; }
 	public DateTime? DueDate { get; }
@@ -15,6 +15,7 @@ public record UpdateTaskItemCommand : IRequest<TaskItemDto>
 	public TaskItemPriority Priority { get; init; }
 
 	public UpdateTaskItemCommand(
+		int id,
 		string? title = null,
 		string? description = null,
 		DateTime? dueDate = null,
@@ -22,6 +23,7 @@ public record UpdateTaskItemCommand : IRequest<TaskItemDto>
 		TaskItemStatus status = TaskItemStatus.Pending
 		)
 	{
+		Id = id;
 		Title = title;
 		Description = description;
 		DueDate = dueDate;

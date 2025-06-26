@@ -33,6 +33,12 @@ namespace Task4ya.Api;
 					options.RoutePrefix = string.Empty;
 				});
 			}
+			using (var scope = app.Services.CreateScope())
+			{
+				var dbContext = scope.ServiceProvider.GetRequiredService<Task4YaDbContext>();
+				dbContext.Database.EnsureCreated();
+				dbContext.Database.Migrate();
+			}
 			app.UseHttpsRedirection();
 			app.UseRouting();
 			app.MapControllers();

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Task4ya.Api.Models.TaskItem;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.TaskItem.Commands.Actions;
 using Task4ya.Application.TaskItem.Queries;
@@ -44,15 +45,20 @@ public class TaskItemController : ControllerBase
 	}
 	
 	[HttpPut("{id}")]
-	public async Task<ActionResult<TaskItemDto>> UpdateTaskItem(int id, [FromBody] UpdateTaskItemCommand command)
+	public async Task<ActionResult> UpdateTaskItem([FromRoute]int id, [FromBody] UpdateTaskItemModel model)
 	{
-		if (id != command.Id && command.Id != 0)
-		{
-			return BadRequest("Invalid task item ID.");
-		}
-		
-		var updatedCommand = command with { Id = id };
-		var result = await _mediator.Send(updatedCommand);
+        ArgumentNullException.ThrowIfNull(model);
+        var command = model.GetCommand(id);
+        
+		var result = await _mediator.Send(command);
 		return Ok(result);
+	}
+	
+	[HttpDelete("{id}")]
+	public async Task<ActionResult> DeleteTaskItem([FromRoute] int id, CancellationToken cancellationToken = default)
+	{
+		var command = new DeleteTaskItemCommand(id);
+		await _mediator.Send(command, cancellationToken);
+		return NoContent();
 	}
 }

@@ -8,7 +8,8 @@ namespace Task4ya.Application.TaskItem.Commands;
 
 public class TaskItemCommandHandler : 
 	IRequestHandler<AddTaskItemCommand, TaskItemDto>,
-	IRequestHandler<UpdateTaskItemCommand, TaskItemDto>
+	IRequestHandler<UpdateTaskItemCommand, TaskItemDto>,
+	IRequestHandler<DeleteTaskItemCommand>
 {
 	private readonly Task4YaDbContext _dbcontext;
 	public TaskItemCommandHandler(Task4YaDbContext dbcontext)
@@ -32,7 +33,8 @@ public class TaskItemCommandHandler :
 	
 	public async Task<TaskItemDto> Handle(UpdateTaskItemCommand request, CancellationToken cancellationToken)
 	{
-		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+        ArgumentNullException.ThrowIfNull(request);
+        var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
 		if (task == null)
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
@@ -49,4 +51,18 @@ public class TaskItemCommandHandler :
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return task.MapToDto();
 	}
+
+	public async Task Handle(DeleteTaskItemCommand request, CancellationToken cancellationToken)
+	{
+        ArgumentNullException.ThrowIfNull(request);
+        
+		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+
+		if (task == null)
+		{
+			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
+		}
+		_dbcontext.TaskItems.Remove(task);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+    }
 }
