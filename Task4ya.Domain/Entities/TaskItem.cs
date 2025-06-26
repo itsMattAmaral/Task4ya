@@ -7,8 +7,8 @@ public class TaskItem
 	public int Id { get; init; }
 	public string Title { get; set; }
 	public string? Description { get; set; }
-	public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
-	public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+	public DateTime CreatedAt { get; init; }
+	public DateTime UpdatedAt { get; set; }
 	public DateTime? DueDate { get; set; }
 	public TaskItemStatus Status { get; set; }
 	public TaskItemPriority Priority { get; set; }
@@ -16,12 +16,13 @@ public class TaskItem
 	public TaskItem(string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending)
 	{
 		StringValidator.ThrowIfNullOrWhiteSpace(title, "Title");
-		StringValidator.ThrowIfNullOrWhiteSpace(description, "Description");
 		Title = title;
 		Description = description;
 		DueDate = dueDate;
 		Status = status;
 		Priority = priority;
+		CreatedAt = DateTime.UtcNow;
+		UpdatedAt = DateTime.UtcNow;
 	}
 	
 	public void UpdateTaskItem(string? newTitle = null, string? newDescription = null, DateTime? newDueDate = null, TaskItemPriority? newPriority = null, TaskItemStatus? newStatus = null)

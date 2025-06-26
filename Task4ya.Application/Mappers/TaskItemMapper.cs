@@ -21,6 +21,8 @@ public static class TaskItemMapper
 			Title = entity.Title,
 			Description = entity.Description,
 			DueDate = entity.DueDate,
+			CreatedAt = entity.CreatedAt,
+			UpdatedAt = entity.UpdatedAt,
 			Status = entity.Status,
 			Priority = entity.Priority
 		};
