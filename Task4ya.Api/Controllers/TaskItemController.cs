@@ -24,8 +24,10 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemCommand command)
+	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemModel model)
 	{
+		ArgumentNullException.ThrowIfNull(model);
+		var command = model.GetCommand();
 		var result = await _mediator.Send(command);
 		return CreatedAtAction(nameof(AddTaskItem), new { id = result.Id }, result);
 	}

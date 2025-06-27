@@ -4,27 +4,29 @@ using Task4ya.Domain.Enums;
 
 namespace Task4ya.Api.Models.TaskItem;
 
-public class UpdateTaskItemModel
+public class AddTaskItemModel
 {
+	[Required(ErrorMessage = "Title is required.")]
 	[MaxLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
 	[MinLength(5, ErrorMessage = "Title must be at least 5 characters long.")]
 	[Display(Name = "Task Title")]
 	[RegularExpression(@"^[a-zA-Z0-9\s]+$", ErrorMessage = "Title can only contain letters, numbers, and spaces.")]
-	public string? Title { get; set; }
+	public string Title { get; set; } = string.Empty;
 	
-	[Display(Name = "Task Description")]
 	[MaxLength(2000, ErrorMessage = "Description cannot exceed 2000 characters.")]
+	[Display(Name = "Task Description")]
 	public string? Description { get; set; }
+	
 	public DateTime? DueDate { get; set; }
 	[Display(Name = "Task Priority")]
 	[Range(0, 3)]
-	public TaskItemPriority Priority { get; set; }
+	public TaskItemPriority Priority { get; set; } = TaskItemPriority.Medium;
 	[Display(Name = "Task Status")]
 	[Range(0, 3)]
-	public TaskItemStatus Status { get; set; }
+	public TaskItemStatus Status { get; set; } = TaskItemStatus.Pending;
 
-	public UpdateTaskItemCommand GetCommand(int id)
+	public AddTaskItemCommand GetCommand()
 	{
-		return new UpdateTaskItemCommand(id, Title, Description, DueDate, Priority, Status);
+		return new AddTaskItemCommand(Title, Description, DueDate, Priority, Status);
 	}
 }
