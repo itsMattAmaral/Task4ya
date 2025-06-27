@@ -24,6 +24,14 @@ public class Task4YaDbContext : DbContext
 			entity.Property(e => e.Status).IsRequired();
 			entity.Property(e => e.Priority).IsRequired();
 		});
+		modelBuilder.Entity<Board>(entity =>
+		{
+			entity.HasKey(e => e.Id);
+			entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+			entity.HasMany(e => e.TaskGroup)
+				.WithMany()
+				.UsingEntity(j => j.ToTable("BoardTaskItems"));
+		});
 		base.OnModelCreating(modelBuilder);
 	}
 }

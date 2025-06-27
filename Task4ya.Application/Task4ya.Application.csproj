@@ -14,4 +14,9 @@
       <PackageReference Include="MediatR" Version="12.5.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Board\Commands\Actions\" />
+      <Folder Include="Board\Queries\" />
+    </ItemGroup>
+
 </Project>
