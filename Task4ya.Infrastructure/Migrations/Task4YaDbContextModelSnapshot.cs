@@ -22,6 +22,39 @@ namespace Task4ya.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("BoardTaskItem", b =>
+                {
+                    b.Property<int>("BoardId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TaskGroupId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("BoardId", "TaskGroupId");
+
+                    b.HasIndex("TaskGroupId");
+
+                    b.ToTable("BoardTaskItems", (string)null);
+                });
+
+            modelBuilder.Entity("Task4ya.Domain.Entities.Board", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Boards");
+                });
+
             modelBuilder.Entity("Task4ya.Domain.Entities.TaskItem", b =>
                 {
                     b.Property<int>("Id")
@@ -61,6 +94,21 @@ namespace Task4ya.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TaskItems");
+                });
+
+            modelBuilder.Entity("BoardTaskItem", b =>
+                {
+                    b.HasOne("Task4ya.Domain.Entities.Board", null)
+                        .WithMany()
+                        .HasForeignKey("BoardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Task4ya.Domain.Entities.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -10,6 +10,7 @@ public class Task4YaDbContext : DbContext
 	}
 	
 	public DbSet<TaskItem> TaskItems => Set<TaskItem>();
+	public DbSet<Board> Boards => Set<Board>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{

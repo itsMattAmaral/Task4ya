@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Task4ya.Application.Board.Commands;
+using Task4ya.Application.Board.Queries;
 using Task4ya.Infrastructure.Data;
 using Task4ya.Application.TaskItem.Commands;
 using Task4ya.Application.TaskItem.Queries;
+using Task4ya.Domain.Repositories;
+using Task4ya.Infrastructure.Repositories;
 
 namespace Task4ya.Api;
 
@@ -15,6 +19,10 @@ namespace Task4ya.Api;
 			{
 				throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 			}
+			builder.Services.AddScoped<IBoardRepository, BoardRepository>();
+			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<BoardCommandHandler>());
+			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<BoardQueryHandler>());
+			builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<TaskItemCommandHandler>());
 			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<TaskItemsQueryHandler>());
 			builder.Services.AddDbContext<Task4YaDbContext>(
@@ -36,7 +44,6 @@ namespace Task4ya.Api;
 			using (var scope = app.Services.CreateScope())
 			{
 				var dbContext = scope.ServiceProvider.GetRequiredService<Task4YaDbContext>();
-				dbContext.Database.EnsureCreated();
 				dbContext.Database.Migrate();
 			}
 			app.UseHttpsRedirection();

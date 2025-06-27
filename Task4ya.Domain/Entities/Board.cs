@@ -9,30 +9,25 @@ public class Board
 	public string Name { get; set; }
 	public ICollection<TaskItem> TaskGroup { get; set; } = new List<TaskItem>();
 	
-	public Board(int taskItemId, string name = "New Board")
-	{
-		Name = name;
-	}
-	
 	public Board(string name = "New Board")
 	{
 		Name = name;
-		TaskGroup = new List<TaskItem>();
 	}
 	
-	public Board()
+	public async Task AddTaskItem(int taskItemId, ITaskItemRepository repository)
 	{
-		Name = "New Board";
-		TaskGroup = new List<TaskItem>();
-	}
-	
-	public async Task<bool> AddTaskItem(int taskItemId, ITaskItemRepository repository)
-	{
+		ArgumentNullException.ThrowIfNull(repository);
+		
 		var taskItem = await repository.GetByIdAsync(taskItemId);
-		if (taskItem is null) return false;
-		if (TaskGroup.Any(t => t.Id == taskItem.Id)) return false;
+		if (taskItem is null)
+		{
+			throw new HttpRequestException("TaskItem not found.", null, System.Net.HttpStatusCode.NotFound);
+		}
+		if (TaskGroup.Any(t => t.Id == taskItem.Id))
+		{
+			throw new HttpRequestException("TaskItem already exists in the board.", null, System.Net.HttpStatusCode.Conflict);
+		}
 		TaskGroup.Add(taskItem);
-		return true;
 	}
 	
 	public void RemoveTaskItem(int taskItemId)
@@ -44,7 +39,7 @@ public class Board
 		}
 		else
 		{
-			throw new KeyNotFoundException($"TaskItem with ID {taskItemId} not found in the board.");
+			throw new HttpRequestException("TaskItem not found.", null, System.Net.HttpStatusCode.NotFound);
 		}
 	}
 	
