@@ -80,6 +80,18 @@ public class TaskItemCommandHandler :
 		return task.MapToDto();
 	}
 
+	public async Task<TaskItemDto> Handle(UpdateTaskDueDateCommand request, CancellationToken cancellationToken)
+	{
+		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+		if (task == null)
+		{
+			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
+		}
+		task.UpdateDueDate(request.DueDate);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return task.MapToDto();
+	}
+
 	public async Task Handle(DeleteTaskItemCommand request, CancellationToken cancellationToken)
 	{
         ArgumentNullException.ThrowIfNull(request);
