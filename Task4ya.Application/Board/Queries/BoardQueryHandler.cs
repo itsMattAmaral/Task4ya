@@ -33,7 +33,7 @@ public class BoardQueryHandler :
 	
 	public async Task<BoardDto> Handle(GetBoardByIdQuery request, CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(request);
+		ArgumentNullException.ThrowIfNull(request, nameof(request));
 		
 		var board = await _boardRepository.GetByIdAsync(request.Id);
 		return board.MapToDto();

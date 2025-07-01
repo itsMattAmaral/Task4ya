@@ -11,14 +11,47 @@ public class TaskItemRepository : ITaskItemRepository
 
 	public TaskItemRepository(Task4YaDbContext dbContext) => _dbContext = dbContext;
 	
-	public async Task<TaskItem?> GetByIdAsync(int id)
+	public async Task<TaskItem> GetByIdAsync(int id)
 	{
-		return await _dbContext.TaskItems.FindAsync(id);
+		return await _dbContext.TaskItems.FindAsync(id) ?? throw new KeyNotFoundException($"TaskItem with ID {id} not found.");
 	}
 
-	public async Task<IEnumerable<TaskItem>> GetAllAsync()
+	public async Task<IEnumerable<TaskItem>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
 	{
-		return await _dbContext.TaskItems.ToListAsync();
+		ArgumentNullException.ThrowIfNull(_dbContext);
+		ArgumentOutOfRangeException.ThrowIfNegative(page, nameof(page));
+		ArgumentOutOfRangeException.ThrowIfNegative(pageSize, nameof(pageSize));
+		
+		var query = _dbContext.TaskItems.AsQueryable();
+		query = query.OrderBy(t => t.Id);
+		
+		if (!string.IsNullOrEmpty(searchTerm))
+		{
+			query = query.Where(t => t.Title.Contains(searchTerm));
+		}
+		
+		if (!string.IsNullOrEmpty(sortBy))
+		{
+			query = sortDescending 
+				? query.OrderByDescending(t => EF.Property<object>(t, sortBy)) 
+				: query.OrderBy(t => EF.Property<object>(t, sortBy));
+		}
+		
+		return await query 
+			.Skip((page - 1) * pageSize)
+			.Take(pageSize)
+			.ToListAsync();
+	}
+
+	public async Task<int> GetCountAsync(string? searchTerm = null)
+	{
+		var query = _dbContext.TaskItems.AsQueryable();
+		
+		if (!string.IsNullOrEmpty(searchTerm))
+		{
+			query = query.Where(t => t.Title.Contains(searchTerm));
+		}
+		return await query.CountAsync();
 	}
 
 	public Task<IEnumerable<TaskItem>> GetByBoardIdAsync(int boardId)

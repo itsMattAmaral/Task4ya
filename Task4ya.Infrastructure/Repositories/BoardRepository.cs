@@ -23,6 +23,7 @@ public class BoardRepository : IBoardRepository
 	public async Task<IEnumerable<Board>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
 	{
 		var query = _dbContext.Boards.AsQueryable();
+		query = query.OrderBy(t => t.Id);
 
 		if (!string.IsNullOrEmpty(searchTerm))
 		{
