@@ -16,8 +16,10 @@ public class BoardRepository : IBoardRepository
 	
 	public async Task<Board> GetByIdAsync(int id)
 	{
-		return await _dbContext.Boards.FindAsync(id) 
-			?? throw new KeyNotFoundException($"Board with ID {id} not found.");
+		return await _dbContext.Boards
+			       .Include(b => b.TaskGroup)
+			       .FirstOrDefaultAsync(b => b.Id == id) 
+		       ?? throw new KeyNotFoundException($"Board with ID {id} not found.");
 	}
 
 	public async Task<IEnumerable<Board>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
