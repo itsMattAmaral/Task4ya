@@ -5,8 +5,6 @@ using Task4ya.Api.Models.Board;
 using Task4ya.Application.Board.Commands.Actions;
 using Task4ya.Application.Board.Queries;
 using Task4ya.Application.Dtos;
-using Task4ya.Domain.Repositories;
-using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Api.Controllers;
 
@@ -15,14 +13,10 @@ namespace Task4ya.Api.Controllers;
 public class BoardController : ControllerBase
 {
 	private readonly IMediator _mediator;
-	private readonly IBoardRepository _boardRepository;
-	private readonly Task4YaDbContext _dbContext;
 	
-	public BoardController(IMediator mediator, IBoardRepository boardRepository, Task4YaDbContext dbContext)
+	public BoardController(IMediator mediator)
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-		_boardRepository = boardRepository ?? throw new ArgumentNullException(nameof(boardRepository));
-		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 	}
 	
 	[HttpPost]
@@ -37,6 +31,25 @@ public class BoardController : ControllerBase
 		var result = await _mediator.Send(command);
 		
 		return CreatedAtAction(nameof(AddBoard), new { id = result.Id }, result);
+	}
+	
+	[HttpPost("AddTaskItemToBoard")]
+	[ProducesResponseType((int)HttpStatusCode.NoContent)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<IActionResult> AddTaskItemToBoard([FromBody] AddTaskItemToBoardModel model)
+	{
+		ArgumentNullException.ThrowIfNull(model);
+		var command = model.GetCommand();
+		
+		if (command.BoardId <= 0 || command.TaskItemId <= 0)
+		{
+			return BadRequest("Invalid board or task item ID.");
+		}
+
+		await _mediator.Send(command);
+		return NoContent();
 	}
 	
 	[HttpGet]

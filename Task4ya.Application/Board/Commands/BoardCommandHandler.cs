@@ -9,7 +9,8 @@ namespace Task4ya.Application.Board.Commands;
 
 public class BoardCommandHandler :
 	IRequestHandler<AddBoardCommand, BoardDto>,
-	IRequestHandler<DeleteBoardCommand>
+	IRequestHandler<DeleteBoardCommand>,
+	IRequestHandler<AddTaskItemToBoardCommand>
 {
 	private readonly Task4YaDbContext _dbcontext;
 	private readonly ITaskItemRepository _taskItemRepository;
@@ -36,6 +37,20 @@ public class BoardCommandHandler :
 		_dbcontext.Add(newBoard);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return newBoard.MapToDto();
+	}
+
+	public async Task Handle(AddTaskItemToBoardCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+
+		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+		if (board == null)
+		{
+			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
+		}
+
+		await board.AddTaskItem(request.TaskItemId, _taskItemRepository);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
 	}
 
 	public async Task Handle(DeleteBoardCommand request, CancellationToken cancellationToken)
