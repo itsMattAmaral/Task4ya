@@ -5,6 +5,7 @@ namespace Task4ya.Domain.Entities;
 public class TaskItem
 {
 	public int Id { get; init; }
+	public int BoardId { get; set; }
 	public string Title { get; set; }
 	public string? Description { get; set; }
 	public DateTime CreatedAt { get; init; }
@@ -13,9 +14,10 @@ public class TaskItem
 	public TaskItemStatus Status { get; set; }
 	public TaskItemPriority Priority { get; set; }
 
-	public TaskItem(string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending)
+	public TaskItem(int boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending)
 	{
 		StringValidator.ThrowIfNullOrWhiteSpace(title, "Title");
+		BoardId = boardId;
 		Title = title;
 		Description = description;
 		DueDate = dueDate;
@@ -25,13 +27,20 @@ public class TaskItem
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
-	public void UpdateTaskItem(string? newTitle = null, string? newDescription = null, DateTime? newDueDate = null, TaskItemPriority? newPriority = null, TaskItemStatus? newStatus = null)
+	public void UpdateTaskItem(int? newBoardId, string? newTitle = null, string? newDescription = null, DateTime? newDueDate = null, TaskItemPriority? newPriority = null, TaskItemStatus? newStatus = null)
 	{
 		if (newTitle is not null) UpdateTaskTitle(newTitle);
 		if (newDescription is not null) UpdateTaskDescription(newDescription);
 		if (newDueDate is not null) UpdateDueDate(newDueDate);
 		if (newPriority is not null) UpdatePriority(newPriority.Value);
 		if (newStatus is not null) UpdateStatus(newStatus.Value);
+		if (newBoardId is not null) UpdateBoardId(newBoardId.Value);
+	}
+
+	public void UpdateBoardId(int newBoardId)
+	{
+		BoardId = newBoardId;
+		UpdatedAt = DateTime.UtcNow;
 	}
 
 	public void UpdateTaskTitle(string newTitle)

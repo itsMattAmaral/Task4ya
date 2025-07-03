@@ -2,6 +2,7 @@ using MediatR;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.Mappers;
 using Task4ya.Application.TaskItem.Commands.Actions;
+using Task4ya.Domain.Repositories;
 using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Application.TaskItem.Commands;
@@ -14,14 +15,22 @@ public class TaskItemCommandHandler :
 	IRequestHandler<DeleteTaskItemCommand>
 {
 	private readonly Task4YaDbContext _dbcontext;
-	public TaskItemCommandHandler(Task4YaDbContext dbcontext)
-		{
-			_dbcontext = dbcontext;
-		}
+	private readonly ITaskItemRepository _taskItemRepository;
+	private readonly IBoardRepository _boardRepository;
+	public TaskItemCommandHandler(Task4YaDbContext dbcontext, IBoardRepository boardRepository, ITaskItemRepository taskItemRepository)
+	{
+		_boardRepository = boardRepository;
+		_taskItemRepository = taskItemRepository;
+		_dbcontext = dbcontext;
+	}
 	
 	public async Task<TaskItemDto> Handle(AddTaskItemCommand request, CancellationToken cancellationToken)
 	{
+		ArgumentNullException.ThrowIfNull(request);
+		await ValidateBoardExists(request.BoardId);
+		
 		var newTask = new Domain.Entities.TaskItem(
+			request.BoardId,
 			request.Title,
 			request.Description,
 			request.DueDate,
@@ -30,12 +39,20 @@ public class TaskItemCommandHandler :
 		);
 		_dbcontext.Add(newTask);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
+		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+		if (board == null)
+		{
+			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
+		}
+		await board.AddTaskItem(newTask.Id, _taskItemRepository);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return newTask.MapToDto();
 	}
 	
 	public async Task<TaskItemDto> Handle(UpdateTaskItemCommand request, CancellationToken cancellationToken)
 	{
         ArgumentNullException.ThrowIfNull(request);
+        await ValidateBoardExists(request.BoardId);
         var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
 		if (task == null)
 		{
@@ -43,6 +60,7 @@ public class TaskItemCommandHandler :
 		}
 
 		task.UpdateTaskItem(
+			newBoardId: request.BoardId,
 			newTitle: request.Title,
 			newDescription: request.Description,
 			newDueDate: request.DueDate,
@@ -105,4 +123,13 @@ public class TaskItemCommandHandler :
 		_dbcontext.TaskItems.Remove(task);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
     }
+	
+	private async Task ValidateBoardExists(int boardId)
+	{
+		var board = await _boardRepository.GetByIdAsync(boardId);
+		if (board == null)
+		{
+			throw new KeyNotFoundException($"Board with ID {boardId} not found.");
+		}
+	}
 }

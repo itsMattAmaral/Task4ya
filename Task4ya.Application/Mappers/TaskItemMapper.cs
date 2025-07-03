@@ -4,12 +4,6 @@ namespace Task4ya.Application.Mappers;
 
 public static class TaskItemMapper
 {
-	public static Domain.Entities.TaskItem MapToEntity(this TaskItemDto itemDto)
-	{
-        ArgumentNullException.ThrowIfNull(itemDto);
-
-        return new Domain.Entities.TaskItem(itemDto.Title, itemDto.Description, itemDto.DueDate);
-	}
 	
 	public static TaskItemDto MapToDto(this Domain.Entities.TaskItem entity)
 	{
@@ -18,6 +12,7 @@ public static class TaskItemMapper
 		return new TaskItemDto
 		{
 			Id = entity.Id,
+			BoardId = entity.BoardId,
 			Title = entity.Title,
 			Description = entity.Description,
 			DueDate = entity.DueDate,

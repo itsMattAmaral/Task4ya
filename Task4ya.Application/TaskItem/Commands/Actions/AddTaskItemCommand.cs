@@ -6,6 +6,7 @@ namespace Task4ya.Application.TaskItem.Commands.Actions;
 
 public record AddTaskItemCommand : IRequest<TaskItemDto>
 {
+	public int BoardId { get; init; }
 	public string Title { get; }
 	public string? Description { get; }
 	public DateTime? DueDate { get; }
@@ -14,6 +15,7 @@ public record AddTaskItemCommand : IRequest<TaskItemDto>
 	public TaskItemPriority Priority { get; init; }
 
 	public AddTaskItemCommand(
+		int boardId,
 		string title,
 		string? description = null,
 		DateTime? dueDate = null,
@@ -21,6 +23,7 @@ public record AddTaskItemCommand : IRequest<TaskItemDto>
 		TaskItemStatus status = TaskItemStatus.Pending
 		)
 	{
+		BoardId = boardId;
 		Title = title;
 		Description = description;
 		DueDate = dueDate;

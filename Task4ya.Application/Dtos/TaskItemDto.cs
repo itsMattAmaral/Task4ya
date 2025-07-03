@@ -5,6 +5,7 @@ namespace Task4ya.Application.Dtos;
 public class TaskItemDto
 {
 	public int Id { get; init; }
+	public int BoardId { get; init; }
 	public required string Title { get; init; }
 	public string? Description { get; init; }
 	public DateTime? DueDate { get; init; }

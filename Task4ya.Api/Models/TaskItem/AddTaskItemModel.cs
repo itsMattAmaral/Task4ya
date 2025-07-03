@@ -6,6 +6,9 @@ namespace Task4ya.Api.Models.TaskItem;
 
 public class AddTaskItemModel
 {
+	[Required(ErrorMessage = "Board ID is required.")]
+	public int BoardId { get; set; }
+	
 	[Required(ErrorMessage = "Title is required.")]
 	[MaxLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
 	[MinLength(5, ErrorMessage = "Title must be at least 5 characters long.")]
@@ -27,6 +30,6 @@ public class AddTaskItemModel
 
 	public AddTaskItemCommand GetCommand()
 	{
-		return new AddTaskItemCommand(Title, Description, DueDate, Priority, Status);
+		return new AddTaskItemCommand(BoardId, Title, Description, DueDate, Priority, Status);
 	}
 }
