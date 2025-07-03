@@ -57,4 +57,16 @@ public class BoardRepository : IBoardRepository
     
 		return await query.CountAsync();
 	}
+	
+	public async Task DeleteAsync(int id)
+	{
+		var board = await _dbContext.Boards.FindAsync(id);
+		if (board == null)
+		{
+			throw new KeyNotFoundException($"Board with ID {id} not found.");
+		}
+		
+		_dbContext.Boards.Remove(board);
+		await _dbContext.SaveChangesAsync();
+	}
 }

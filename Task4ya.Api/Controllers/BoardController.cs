@@ -2,6 +2,7 @@ using System.Net;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Task4ya.Api.Models.Board;
+using Task4ya.Application.Board.Commands.Actions;
 using Task4ya.Application.Board.Queries;
 using Task4ya.Application.Dtos;
 using Task4ya.Domain.Repositories;
@@ -73,6 +74,21 @@ public class BoardController : ControllerBase
 		return Ok(result);
 	}
 	
-	
+	[HttpDelete("{id}")]
+	[ProducesResponseType((int)HttpStatusCode.NoContent)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<IActionResult> DeleteBoard([FromRoute] int id)
+	{
+		if (id <= 0)
+		{
+			return BadRequest("Invalid board ID.");
+		}
+
+		var command = new DeleteBoardCommand(id);
+		await _mediator.Send(command);
+		return NoContent();
+	}
 	
 }
