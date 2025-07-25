@@ -1,5 +1,6 @@
 using System.Net;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Task4ya.Api.Models.Board;
 using Task4ya.Application.Board.Commands.Actions;
@@ -20,6 +21,7 @@ public class BoardController : ControllerBase
 	}
 	
 	[HttpPost]
+	[Authorize]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.Created)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
@@ -53,7 +55,7 @@ public class BoardController : ControllerBase
 	}
 	
 	[HttpGet]
-	[ProducesResponseType(typeof(IEnumerable<BoardDto>), (int)HttpStatusCode.OK)]
+	[ProducesResponseType(typeof(PagedResponseDto<BoardDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]

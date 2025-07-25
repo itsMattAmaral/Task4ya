@@ -5,9 +5,9 @@ namespace Task4ya.Domain.Entities;
 
 public class Board
 {
-	public int Id { get; set; }
+	public int Id { get; init; }
 	public string Name { get; set; }
-	public ICollection<TaskItem> TaskGroup { get; set; } = new List<TaskItem>();
+	public ICollection<TaskItem> TaskGroup { get; init; } = new List<TaskItem>();
 	
 	public Board(string name = "New Board")
 	{
