@@ -11,6 +11,8 @@ public class Task4YaDbContext : DbContext
 	
 	public DbSet<TaskItem> TaskItems => Set<TaskItem>();
 	public DbSet<Board> Boards => Set<Board>();
+	
+	public DbSet<User> Users => Set<User>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
@@ -33,6 +35,16 @@ public class Task4YaDbContext : DbContext
 				.WithMany()
 				.UsingEntity(j => j.ToTable("BoardTaskItems"));
 		});
+		modelBuilder.Entity<User>(entity =>
+		{
+			entity.HasKey(e => e.Id);
+			entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+			entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+			entity.Property(e => e.Password).IsRequired().HasMaxLength(200);
+			entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+			entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+		});
+		
 		base.OnModelCreating(modelBuilder);
 	}
 }

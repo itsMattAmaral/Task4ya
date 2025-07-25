@@ -1,9 +1,14 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Task4ya.Application.Board.Commands;
 using Task4ya.Application.Board.Queries;
 using Task4ya.Infrastructure.Data;
 using Task4ya.Application.TaskItem.Commands;
 using Task4ya.Application.TaskItem.Queries;
+using Task4ya.Application.User.Commands;
+using Task4ya.Application.User.Queries;
 using Task4ya.Domain.Repositories;
 using Task4ya.Infrastructure.Repositories;
 
@@ -25,8 +30,37 @@ namespace Task4ya.Api;
 			builder.Services.AddScoped<ITaskItemRepository, TaskItemRepository>();
 			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<TaskItemCommandHandler>());
 			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<TaskItemsQueryHandler>());
+			builder.Services.AddScoped<IUserRepository, UserRepository>();
+			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<UserCommandHandler>());
+			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<UserQueryHandler>());
 			builder.Services.AddDbContext<Task4YaDbContext>(
-				options => options.UseNpgsql(connectionString));
+				options => options.UseNpgsql(
+					connectionString, 
+					npgsqlOptions => npgsqlOptions.MigrationsAssembly("Task4ya.Infrastructure")
+					));
+
+			builder.Services.AddAuthentication(config =>
+			{
+				config.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				config.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+				config.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+			}).AddJwtBearer(options =>
+			{ 
+				options.RequireHttpsMetadata = false;
+				options.SaveToken = true;
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(
+						Encoding.UTF8.GetBytes(
+							builder.Configuration["ApplicationSettings:JWT_Secret"] ?? string.Empty)
+						),
+					ValidateIssuer = false,
+					ValidateAudience = false,
+					ClockSkew = TimeSpan.Zero
+				};
+			});
+			builder.Services.AddAuthorization();
 			builder.Services.AddControllers();
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen();
@@ -46,6 +80,9 @@ namespace Task4ya.Api;
 				var dbContext = scope.ServiceProvider.GetRequiredService<Task4YaDbContext>();
 				dbContext.Database.Migrate();
 			}
+			
+			app.UseAuthentication();
+			app.UseAuthorization();
 			app.UseHttpsRedirection();
 			app.UseRouting();
 			app.MapControllers();
