@@ -5,7 +5,9 @@ using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Application.User.Queries;
 
-public class UserQueryHandler : IRequestHandler<GetAllUsersQuery, PagedResponseDto<UserDto>>
+public class UserQueryHandler : 
+	IRequestHandler<GetAllUsersQuery, PagedResponseDto<UserDto>>,
+	IRequestHandler<GetUserByIdQuery, UserDto>
 {
 	private readonly IUserRepository _userRepository;
 	
@@ -27,5 +29,13 @@ public class UserQueryHandler : IRequestHandler<GetAllUsersQuery, PagedResponseD
 			Page = request.Page,
 			PageSize = request.PageSize
 		};
+	}
+
+	public async Task<UserDto> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request, nameof(request));
+		
+		var user = await _userRepository.GetByIdAsync(request.Id);
+		return user.MapToDto();
 	}
 }

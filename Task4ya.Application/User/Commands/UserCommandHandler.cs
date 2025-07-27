@@ -23,6 +23,10 @@ public class UserCommandHandler :
 	{
 		ArgumentNullException.ThrowIfNull(request);
 		var newUser = new Domain.Entities.User(request.Name, request.Email, request.Password);
+		if (await _userRepository.ExistsAsync(newUser.Email, cancellationToken))
+		{
+			throw new InvalidOperationException($"User with email {newUser.Email} already exists.");
+		}
 		_dbcontext.Add(newUser);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return newUser.MapToDto();

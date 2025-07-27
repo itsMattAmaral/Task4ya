@@ -21,7 +21,7 @@ public class UserRepository : IUserRepository
 			?? throw new KeyNotFoundException($"User with ID {id} not found.");
 	}
 
-	public Task<List<User>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
+	public async Task<List<User>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
 	{
 		var query = _dbContext.Users.AsQueryable();
 		query = query.OrderBy(u => u.Id);
@@ -38,13 +38,13 @@ public class UserRepository : IUserRepository
 				: query.OrderBy(u => EF.Property<object>(u, sortBy));
 		}
 
-		return query
+		return await query
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.ToListAsync();
 	}
 
-	public Task<int> GetCountAsync(string? searchTerm = null)
+	public async Task<int> GetCountAsync(string? searchTerm = null)
 	{
 		var query = _dbContext.Users.AsQueryable();
 		
@@ -53,12 +53,18 @@ public class UserRepository : IUserRepository
 			query = query.Where(u => u.Name.Contains(searchTerm) || u.Email.Contains(searchTerm));
 		}
 		
-		return query.CountAsync();
+		return await query.CountAsync();
 	}
 
-	public Task<User?> GetByEmailAsync(string email)
+	public async Task<User?> GetByEmailAsync(string email)
 	{
-		return _dbContext.Users
+		return await _dbContext.Users
 			.FirstOrDefaultAsync(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+	}
+	
+	public async Task<bool> ExistsAsync(string newUserEmail, CancellationToken cancellationToken)
+	{
+		return await _dbContext.Users
+			.AnyAsync(u => u.Email.Equals(newUserEmail, StringComparison.OrdinalIgnoreCase), cancellationToken);
 	}
 }
