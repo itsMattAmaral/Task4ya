@@ -49,4 +49,23 @@ public class UserController : ControllerBase
 		
 		return Ok(result);
 	}
+	
+	[HttpGet("{id:int}")]
+	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.NotFound)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<UserDto>> GetUserById(int id)
+	{
+		if (id <= 0)
+		{
+			return BadRequest("Invalid user ID.");
+		}
+		
+		var query = new GetUserByIdQuery(id);
+		var result = await _mediator.Send(query);
+
+		return Ok(result);
+	}
 }
