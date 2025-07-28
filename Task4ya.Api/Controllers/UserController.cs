@@ -12,8 +12,9 @@ namespace Task4ya.Api.Controllers;
 public class UserController : ControllerBase
 {
 	private readonly IMediator _mediator;
-	
-	public UserController(IMediator mediator)
+    private static readonly string[] SourceArray = new[] { "Id", "Name", "Email", "CreatedAt" };
+
+    public UserController(IMediator mediator)
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
@@ -24,9 +25,17 @@ public class UserController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<UserDto>> AddUser([FromBody] AddUserModel model)
+	public async Task<ActionResult<UserDto>> AddUser([FromBody] AddUserModel? model)
 	{
-		ArgumentNullException.ThrowIfNull(model);
+		if (
+			model is null ||
+			string.IsNullOrWhiteSpace(model.Name) ||
+			string.IsNullOrWhiteSpace(model.Email) ||
+			string.IsNullOrWhiteSpace(model.Password)
+			)
+		{
+			return BadRequest("Invalid user data. Name, Email and Password cannot be empty.");
+		}
 		var command = model.GetCommand();
 		var result = await _mediator.Send(command);
 		
@@ -45,6 +54,18 @@ public class UserController : ControllerBase
 		[FromQuery] string? sortBy = null, 
 		[FromQuery] bool sortDescending = false)
 	{
+		if (page < 1 || pageSize < 1)
+		{
+			return BadRequest("Page and PageSize must be greater than 0.");
+		}
+		if (sortBy != null && !SourceArray.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
+		{
+			return BadRequest("Invalid sortBy parameter. Allowed values are: Name, Email, CreatedAt.");
+		}
+		if (sortDescending && sortBy is null)
+		{
+			return BadRequest("sortDescending can only be true if sortBy is provided.");
+		}
 		var query = new GetAllUsersQuery(page, pageSize, searchTerm, sortBy, sortDescending);
 		var result = await _mediator.Send(query);
 		
@@ -59,13 +80,17 @@ public class UserController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult<UserDto>> GetUserById(int id)
 	{
-		if (id <= 0)
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
 		{
 			return BadRequest("Invalid user ID.");
 		}
 		
 		var query = new GetUserByIdQuery(id);
 		var result = await _mediator.Send(query);
+		if (result is null)
+		{
+			return NotFound($"User with ID {id} not found.");
+		}
 
 		return Ok(result);
 	}

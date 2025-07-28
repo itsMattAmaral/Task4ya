@@ -59,7 +59,7 @@ public class TaskItemController : ControllerBase
 		{
 			return BadRequest("Invalid sortBy parameter. Allowed values are: CreatedAt, Title, Priority, DueDate, Status.");
 		}
-		if (sortDescending && sortBy == null)
+		if (sortDescending && sortBy is null)
 		{
 			return BadRequest("sortDescending can only be true if sortBy is specified.");
 		}
