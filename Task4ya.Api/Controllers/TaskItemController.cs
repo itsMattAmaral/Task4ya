@@ -35,8 +35,21 @@ public class TaskItemController : ControllerBase
 			return BadRequest("Invalid task item data. BoardId must be greater than 0 and Title cannot be empty.");
 		}
 		var command = model.GetCommand();
-		var result = await _mediator.Send(command);
-		return CreatedAtAction(nameof(AddTaskItem), new { id = result.Id }, result);
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return CreatedAtAction(nameof(AddTaskItem), new {id = result.Id}, result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError,
+				$"An error occurred while adding the task item: {ex.Message}");
+		}
 	}
 
 	[HttpGet]
@@ -105,9 +118,21 @@ public class TaskItemController : ControllerBase
 			return BadRequest("Invalid task item data. ID must be greater than 0. Request body cannot be empty.");
 		}
         var command = model.GetCommand(id);
-        
-		var result = await _mediator.Send(command);
-		return Ok(result);
+
+        try
+        {
+	        var result = await _mediator.Send(command);
+	        return Ok(result);
+        }
+        catch (KeyNotFoundException ex)
+		{
+	        return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+	        return StatusCode((int)HttpStatusCode.InternalServerError,
+		        $"An error occurred while updating the task item: {ex.Message}");
+		}
 	}
 	
 	[Authorize]
@@ -127,8 +152,21 @@ public class TaskItemController : ControllerBase
 			return BadRequest("Invalid task status. Allowed values are: Pending = 0, InProgress = 1, Blocked = 2, Done = 3.");
 		}
 		var command = model.GetCommand(id);
-		var result = await _mediator.Send(command, cancellationToken);
-		return Ok(result);
+
+		try
+		{
+			var result = await _mediator.Send(command, cancellationToken);
+			return Ok(result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError,
+				$"An error occurred while updating the task status: {ex.Message}");
+		}
 	}
 	
 	[Authorize]
@@ -149,8 +187,21 @@ public class TaskItemController : ControllerBase
 			return BadRequest("Invalid task priority. Allowed values are: Low = 0, Medium = 1, High = 2, Urgent = 3.");
 		}
 		var command = model.GetCommand(id);
-		var result = await _mediator.Send(command, cancellationToken);
-		return Ok(result);
+
+		try
+		{
+			var result = await _mediator.Send(command, cancellationToken);
+			return Ok(result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError,
+				$"An error occurred while updating the task priority: {ex.Message}");
+		}
 	}
 	
 	[Authorize]
@@ -170,9 +221,24 @@ public class TaskItemController : ControllerBase
 		{
 			return BadRequest("Due date cannot be in the past.");
 		}
+		
 		var command = model.GetCommand(id);
-		var result = await _mediator.Send(command, cancellationToken);
-		return Ok(result);
+
+		try
+		{
+			var result = await _mediator.Send(command, cancellationToken);
+			return Ok(result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError,
+				$"An error occurred while updating the task due date: {ex.Message}");
+		}
+
 	}
 	
 	[Authorize]

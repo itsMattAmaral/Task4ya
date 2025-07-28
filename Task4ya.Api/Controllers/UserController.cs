@@ -37,9 +37,20 @@ public class UserController : ControllerBase
 			return BadRequest("Invalid user data. Name, Email and Password cannot be empty.");
 		}
 		var command = model.GetCommand();
-		var result = await _mediator.Send(command);
-		
-		return CreatedAtAction(nameof(AddUser), new { id = result.Id }, result);
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return CreatedAtAction(nameof(AddUser), new {id = result.Id}, result);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred: {ex.Message}");
+		}
 	}
 	
 	[HttpGet]

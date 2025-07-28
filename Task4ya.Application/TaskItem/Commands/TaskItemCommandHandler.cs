@@ -15,18 +15,15 @@ public class TaskItemCommandHandler :
 	IRequestHandler<DeleteTaskItemCommand>
 {
 	private readonly Task4YaDbContext _dbcontext;
-	private readonly ITaskItemRepository _taskItemRepository;
 	private readonly IBoardRepository _boardRepository;
 	public TaskItemCommandHandler(Task4YaDbContext dbcontext, IBoardRepository boardRepository, ITaskItemRepository taskItemRepository)
 	{
 		_boardRepository = boardRepository;
-		_taskItemRepository = taskItemRepository;
 		_dbcontext = dbcontext;
 	}
 	
-	public async Task<TaskItemDto?> Handle(AddTaskItemCommand request, CancellationToken cancellationToken)
+	public async Task<TaskItemDto> Handle(AddTaskItemCommand request, CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(request);
 		await ValidateBoardExists(request.BoardId);
 		
 		var newTask = new Domain.Entities.TaskItem(
@@ -40,16 +37,12 @@ public class TaskItemCommandHandler :
 		_dbcontext.Add(newTask);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		var board = await _boardRepository.GetByIdAsync(request.BoardId);
-		if (board == null)
-		{
-			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
-		}
-		await board.AddTaskItem(newTask.Id, _taskItemRepository);
+		board?.AddTaskItem(newTask);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return newTask.MapToDto();
 	}
 	
-	public async Task<TaskItemDto?> Handle(UpdateTaskItemCommand request, CancellationToken cancellationToken)
+	public async Task<TaskItemDto> Handle(UpdateTaskItemCommand request, CancellationToken cancellationToken)
 	{
         ArgumentNullException.ThrowIfNull(request);
         await ValidateBoardExists(request.BoardId);
@@ -72,7 +65,7 @@ public class TaskItemCommandHandler :
 		return task.MapToDto();
 	}
 
-	public async Task<TaskItemDto?> Handle(UpdateTaskStatusCommand request, CancellationToken cancellationToken)
+	public async Task<TaskItemDto> Handle(UpdateTaskStatusCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
@@ -85,7 +78,7 @@ public class TaskItemCommandHandler :
 		return task.MapToDto();
 	}
 
-	public async Task<TaskItemDto?> Handle(UpdateTaskPriorityCommand request, CancellationToken cancellationToken)
+	public async Task<TaskItemDto> Handle(UpdateTaskPriorityCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);

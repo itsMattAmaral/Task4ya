@@ -7,7 +7,7 @@ namespace Task4ya.Application.Board.Queries;
 
 public class BoardQueryHandler : 
 	IRequestHandler<GetAllBoardsQuery, PagedResponseDto<BoardDto>>,
-	IRequestHandler<GetBoardByIdQuery, BoardDto>
+	IRequestHandler<GetBoardByIdQuery, BoardDto?>
 {
 	private readonly IBoardRepository _boardRepository;
 	
@@ -31,11 +31,11 @@ public class BoardQueryHandler :
 		};
 	}
 	
-	public async Task<BoardDto> Handle(GetBoardByIdQuery request, CancellationToken cancellationToken)
+	public async Task<BoardDto?> Handle(GetBoardByIdQuery request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request, nameof(request));
 		
 		var board = await _boardRepository.GetByIdAsync(request.Id);
-		return board.MapToDto();
+		return board?.MapToDto();
 	}
 }

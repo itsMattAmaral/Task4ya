@@ -1,4 +1,3 @@
-using Task4ya.Domain.Repositories;
 using Task4ya.Domain.Utils;
 
 namespace Task4ya.Domain.Entities;
@@ -14,19 +13,8 @@ public class Board
 		Name = name;
 	}
 	
-	public async Task AddTaskItem(int taskItemId, ITaskItemRepository repository)
+	public void AddTaskItem(TaskItem taskItem)
 	{
-		ArgumentNullException.ThrowIfNull(repository);
-		
-		var taskItem = await repository.GetByIdAsync(taskItemId);
-		if (taskItem is null)
-		{
-			throw new HttpRequestException("TaskItem not found.", null, System.Net.HttpStatusCode.NotFound);
-		}
-		if (TaskGroup.Any(t => t.Id == taskItem.Id))
-		{
-			throw new HttpRequestException("TaskItem already exists in the board.", null, System.Net.HttpStatusCode.Conflict);
-		}
 		TaskGroup.Add(taskItem);
 	}
 	

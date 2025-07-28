@@ -34,9 +34,24 @@ public class BoardController : ControllerBase
 			return BadRequest("Invalid board data. Name cannot be empty.");
 		}
 		var command = model.GetCommand();
-		var result = await _mediator.Send(command);
-		
-		return CreatedAtAction(nameof(AddBoard), new { id = result.Id }, result);
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return CreatedAtAction(nameof(AddBoard), new { id = result.Id }, result);	
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while adding the board: {ex.Message}");
+		}
 	}
 	
 	[Authorize]
@@ -52,7 +67,24 @@ public class BoardController : ControllerBase
 			return BadRequest("Invalid board or task item data. BoardId and TaskItemId must be greater than 0.");
 		}
 		var command = model.GetCommand();
-		await _mediator.Send(command);
+
+		try
+		{
+			await _mediator.Send(command);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while adding the task item to the board: {ex.Message}");
+		}
+		
 		return NoContent();
 	}
 	

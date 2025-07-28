@@ -26,15 +26,19 @@ public class BoardCommandHandler :
 
 	public async Task<BoardDto> Handle(AddBoardCommand request, CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(request);
-
 		var newBoard = new Domain.Entities.Board(request.Name);
-
+		_dbcontext.Add(newBoard);
 		foreach (var taskId in request.TaskItemIds)
 		{
-			await newBoard.AddTaskItem(taskId, _taskItemRepository);
+			var taskItem = await _taskItemRepository.GetByIdAsync(taskId);
+			if (taskItem == null)
+			{
+				throw new KeyNotFoundException($"TaskItem with ID {taskId} not found.");
+			}
+			
+			taskItem.BoardId = newBoard.Id;
+			newBoard.AddTaskItem(taskItem);
 		}
-		_dbcontext.Add(newBoard);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 		return newBoard.MapToDto();
 	}
@@ -48,8 +52,18 @@ public class BoardCommandHandler :
 		{
 			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
 		}
+		var taskItem = await _taskItemRepository.GetByIdAsync(request.TaskItemId);
+		if (taskItem == null)
+		{
+			throw new KeyNotFoundException($"TaskItem with ID {request.TaskItemId} not found.");
+		}
+		
+		if (board.TaskGroup.Any(t => t.Id == taskItem.Id))
+		{
+			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already exists in the board.");
+		}
 
-		await board.AddTaskItem(request.TaskItemId, _taskItemRepository);
+		board.AddTaskItem(taskItem);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 	}
 
