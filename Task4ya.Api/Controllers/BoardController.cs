@@ -20,8 +20,8 @@ public class BoardController : ControllerBase
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
 	
-	[HttpPost]
 	[Authorize]
+	[HttpPost]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.Created)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
@@ -35,6 +35,7 @@ public class BoardController : ControllerBase
 		return CreatedAtAction(nameof(AddBoard), new { id = result.Id }, result);
 	}
 	
+	[Authorize]
 	[HttpPost("AddTaskItemToBoard")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -89,6 +90,7 @@ public class BoardController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize]
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]

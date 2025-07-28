@@ -1,5 +1,6 @@
 using System.Net;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Task4ya.Api.Models.TaskItem;
 using Task4ya.Application.Dtos;
@@ -18,7 +19,8 @@ public class TaskItemController : ControllerBase
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
-
+	
+	[Authorize]
 	[HttpPost]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.Created)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -65,6 +67,7 @@ public class TaskItemController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize]
 	[HttpPut("{id}")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -79,6 +82,7 @@ public class TaskItemController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize]
 	[HttpPatch("{id}/status")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -91,7 +95,8 @@ public class TaskItemController : ControllerBase
 		var result = await _mediator.Send(command, cancellationToken);
 		return Ok(result);
 	}
-
+	
+	[Authorize]
 	[HttpPatch("{id}/priority")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -106,6 +111,7 @@ public class TaskItemController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize]
 	[HttpPatch("{id}/DueDate")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -120,6 +126,7 @@ public class TaskItemController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize]
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]

@@ -19,6 +19,7 @@ public class UserController : ControllerBase
 	}
 	
 	[HttpPost]
+	[Route("register")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.Created)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]

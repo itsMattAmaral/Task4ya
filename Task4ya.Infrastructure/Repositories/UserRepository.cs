@@ -59,12 +59,12 @@ public class UserRepository : IUserRepository
 	public async Task<User?> GetByEmailAsync(string email)
 	{
 		return await _dbContext.Users
-			.FirstOrDefaultAsync(u => u.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+			.FirstOrDefaultAsync(u => u.Email.Equals(email));
 	}
 	
 	public async Task<bool> ExistsAsync(string newUserEmail, CancellationToken cancellationToken)
 	{
 		return await _dbContext.Users
-			.AnyAsync(u => u.Email.Equals(newUserEmail, StringComparison.OrdinalIgnoreCase), cancellationToken);
+			.AnyAsync(u => u.Email.Equals(newUserEmail), cancellationToken);
 	}
 }

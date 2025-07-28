@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Task4ya.Api.Helpers;
 using Task4ya.Application.Board.Commands;
 using Task4ya.Application.Board.Queries;
 using Task4ya.Infrastructure.Data;
@@ -24,6 +25,7 @@ namespace Task4ya.Api;
 			{
 				throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
 			}
+			builder.Services.AddScoped<AuthHelpers>();
 			builder.Services.AddScoped<IBoardRepository, BoardRepository>();
 			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<BoardCommandHandler>());
 			builder.Services.AddMediatR(ctg => ctg.RegisterServicesFromAssemblyContaining<BoardQueryHandler>());
@@ -63,7 +65,36 @@ namespace Task4ya.Api;
 			builder.Services.AddAuthorization();
 			builder.Services.AddControllers();
 			builder.Services.AddEndpointsApiExplorer();
-			builder.Services.AddSwaggerGen();
+			builder.Services.AddSwaggerGen(options =>
+			{
+				options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+				{
+					Title = "Task4ya API",
+					Version = "v1",
+					Description = "API for Task4ya application"
+				});
+
+				var jwtSecurityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+				{
+					Scheme = "bearer",
+					BearerFormat = "JWT",
+					Name = "Authorization",
+					In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+					Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+					Description = "Put **_only_** your JWT Bearer token below.",
+					Reference = new Microsoft.OpenApi.Models.OpenApiReference
+					{
+						Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+						Id = JwtBearerDefaults.AuthenticationScheme
+					}
+				};
+				
+				options.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+				options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+				{
+					{ jwtSecurityScheme, Array.Empty<string>() }
+				});
+			});
 			
 			var app = builder.Build();
 			if (app.Environment.IsDevelopment())
@@ -81,10 +112,10 @@ namespace Task4ya.Api;
 				dbContext.Database.Migrate();
 			}
 			
-			app.UseAuthentication();
-			app.UseAuthorization();
 			app.UseHttpsRedirection();
 			app.UseRouting();
+			app.UseAuthentication();
+			app.UseAuthorization();
 			app.MapControllers();
 			app.Run();
 		}
