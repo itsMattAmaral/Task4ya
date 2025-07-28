@@ -85,6 +85,10 @@ public class TaskItemController : ControllerBase
 		}
 		
 		var result = await _mediator.Send(new GetTaskItemByIdQuery(id));
+		if (result is null)
+		{
+			return NotFound($"Task item with ID {id} not found.");
+		}
 		return Ok(result);
 	}
 	

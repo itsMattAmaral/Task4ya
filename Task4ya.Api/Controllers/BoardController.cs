@@ -14,8 +14,9 @@ namespace Task4ya.Api.Controllers;
 public class BoardController : ControllerBase
 {
 	private readonly IMediator _mediator;
-	
-	public BoardController(IMediator mediator)
+    private static readonly string[] SourceArray = new[] { "Name", "CreatedAt" };
+
+    public BoardController(IMediator mediator)
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
@@ -26,9 +27,12 @@ public class BoardController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<BoardDto>> AddBoard([FromBody] AddBoardModel model)
+	public async Task<ActionResult<BoardDto>> AddBoard([FromBody] AddBoardModel? model)
 	{
-		ArgumentNullException.ThrowIfNull(model);
+		if (model is null || string.IsNullOrWhiteSpace(model.Name))
+		{
+			return BadRequest("Invalid board data. Name cannot be empty.");
+		}
 		var command = model.GetCommand();
 		var result = await _mediator.Send(command);
 		
@@ -41,16 +45,13 @@ public class BoardController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<IActionResult> AddTaskItemToBoard([FromBody] AddTaskItemToBoardModel model)
+	public async Task<IActionResult> AddTaskItemToBoard([FromBody] AddTaskItemToBoardModel? model)
 	{
-		ArgumentNullException.ThrowIfNull(model);
-		var command = model.GetCommand();
-		
-		if (command.BoardId <= 0 || command.TaskItemId <= 0)
+		if (model is null || model.BoardId <= 0 || model.TaskItemId <= 0)
 		{
-			return BadRequest("Invalid board or task item ID.");
+			return BadRequest("Invalid board or task item data. BoardId and TaskItemId must be greater than 0.");
 		}
-
+		var command = model.GetCommand();
 		await _mediator.Send(command);
 		return NoContent();
 	}
@@ -67,6 +68,22 @@ public class BoardController : ControllerBase
 		[FromQuery] string? sortBy = null, 
 		[FromQuery] bool sortDescending = false)
 	{
+		if (page < 1 || pageSize < 1)
+		{
+			return BadRequest("Page and PageSize must be greater than 0.");
+		}
+		if (sortBy != null && !SourceArray.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
+		{
+			return BadRequest("Invalid sortBy parameter. Allowed values are: Name, CreatedAt.");
+		}
+		if (sortDescending && sortBy == null)
+		{
+			return BadRequest("sortDescending can only be true if sortBy is specified.");
+		}
+		if (searchTerm is {Length: > 100})
+		{
+			return BadRequest("Search term cannot exceed 100 characters.");
+		}
 		var query = new GetAllBoardsQuery(page, pageSize, searchTerm, sortBy, sortDescending);
 		var result = await _mediator.Send(query);
 		return Ok(result);
@@ -86,6 +103,10 @@ public class BoardController : ControllerBase
 
 		var query = new GetBoardByIdQuery(id);
 		var result = await _mediator.Send(query);
+		if (result is null)
+		{
+			return NotFound($"Board with ID {id} not found.");
+		}
 		
 		return Ok(result);
 	}
@@ -98,11 +119,15 @@ public class BoardController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<IActionResult> DeleteBoard([FromRoute] int id)
 	{
-		if (id <= 0)
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
 		{
 			return BadRequest("Invalid board ID.");
 		}
-
+		var board = await _mediator.Send(new GetBoardByIdQuery(id));
+		if (board is null)
+		{
+			return NotFound($"Board with ID {id} not found.");
+		}
 		var command = new DeleteBoardCommand(id);
 		await _mediator.Send(command);
 		return NoContent();
