@@ -28,6 +28,7 @@ public class BoardCommandHandler :
 	{
 		var newBoard = new Domain.Entities.Board(request.Name);
 		_dbcontext.Add(newBoard);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
 		foreach (var taskId in request.TaskItemIds)
 		{
 			var taskItem = await _taskItemRepository.GetByIdAsync(taskId);
