@@ -6,6 +6,7 @@ using Task4ya.Api.Models.TaskItem;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.TaskItem.Commands.Actions;
 using Task4ya.Application.TaskItem.Queries;
+using Task4ya.Domain.Enums;
 
 namespace Task4ya.Api.Controllers;
 
@@ -14,8 +15,9 @@ namespace Task4ya.Api.Controllers;
 public class TaskItemController : ControllerBase
 {
 	private readonly IMediator _mediator;
+    private static readonly string[] SourceArray = new[] { "Title", "Priority", "DueDate", "Status", "CreatedAt" };
 
-	public TaskItemController(IMediator mediator)
+    public TaskItemController(IMediator mediator)
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
@@ -26,9 +28,12 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemModel model)
+	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemModel? model)
 	{
-		ArgumentNullException.ThrowIfNull(model);
+		if (model is null || model.BoardId <= 0 || string.IsNullOrWhiteSpace(model.Title))
+		{
+			return BadRequest("Invalid task item data. BoardId must be greater than 0 and Title cannot be empty.");
+		}
 		var command = model.GetCommand();
 		var result = await _mediator.Send(command);
 		return CreatedAtAction(nameof(AddTaskItem), new { id = result.Id }, result);
@@ -46,6 +51,22 @@ public class TaskItemController : ControllerBase
 		[FromQuery] string? sortBy = null, 
 		[FromQuery] bool sortDescending = false)
 	{
+		if (page < 1 || pageSize < 1)
+		{
+			return BadRequest("Page and PageSize must be greater than 0.");
+		}
+		if (sortBy != null && !SourceArray.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
+		{
+			return BadRequest("Invalid sortBy parameter. Allowed values are: CreatedAt, Title, Priority, DueDate, Status.");
+		}
+		if (sortDescending && sortBy == null)
+		{
+			return BadRequest("sortDescending can only be true if sortBy is specified.");
+		}
+		if (searchTerm is {Length: > 100})
+		{
+			return BadRequest("Search term cannot exceed 100 characters.");
+		}
 		var query = new GetAllTaskItemsQuery(page, pageSize, searchTerm, sortBy, sortDescending);
 		var result = await _mediator.Send(query);
 		return Ok(result);
@@ -73,9 +94,12 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult> UpdateTaskItem([FromRoute]int id, [FromBody] UpdateTaskItemModel model)
+	public async Task<ActionResult> UpdateTaskItem([FromRoute]int id, [FromBody] UpdateTaskItemModel? model)
 	{
-        ArgumentNullException.ThrowIfNull(model);
+		if (model is null || id <= 0)
+		{
+			return BadRequest("Invalid task item data. ID must be greater than 0. Request body cannot be empty.");
+		}
         var command = model.GetCommand(id);
         
 		var result = await _mediator.Send(command);
@@ -88,9 +112,16 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult> UpdateTaskStatus([FromRoute] int id, [FromBody] UpdateTaskStatusModel model, CancellationToken cancellationToken = default)
+	public async Task<ActionResult> UpdateTaskStatus([FromRoute] int id, [FromBody] UpdateTaskStatusModel? model, CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(model);
+		if (model is null || id <= 0)
+		{
+			return BadRequest("Invalid task item data. ID must be greater than 0. Request body cannot be empty.");
+		}
+		if (!Enum.IsDefined(typeof(TaskItemStatus), model.Status))
+		{
+			return BadRequest("Invalid task status. Allowed values are: Pending = 0, InProgress = 1, Blocked = 2, Done = 3.");
+		}
 		var command = model.GetCommand(id);
 		var result = await _mediator.Send(command, cancellationToken);
 		return Ok(result);
@@ -102,10 +133,17 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult> UpdateTaskPriority([FromRoute] int id, [FromBody] UpdateTaskPriorityModel model,
+	public async Task<ActionResult> UpdateTaskPriority([FromRoute] int id, [FromBody] UpdateTaskPriorityModel? model,
 		CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(model);
+		if (model is null || id <= 0)
+		{
+			return BadRequest("Invalid task item data. ID must be greater than 0. Request body cannot be empty.");
+		}
+		if (!Enum.IsDefined(typeof(TaskItemPriority), model.Priority))
+		{
+			return BadRequest("Invalid task priority. Allowed values are: Low = 0, Medium = 1, High = 2, Urgent = 3.");
+		}
 		var command = model.GetCommand(id);
 		var result = await _mediator.Send(command, cancellationToken);
 		return Ok(result);
@@ -117,10 +155,17 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult> UpdateTaskDueDate([FromRoute] int id, [FromBody] UpdateTaskDueDateModel model,
+	public async Task<ActionResult> UpdateTaskDueDate([FromRoute] int id, [FromBody] UpdateTaskDueDateModel? model,
 		CancellationToken cancellationToken = default)
 	{
-		ArgumentNullException.ThrowIfNull(model);
+		if (model is null || id <= 0)
+		{
+			return BadRequest("Invalid task item data. ID must be greater than 0. Request body cannot be empty.");
+		}
+		if (model.DueDate < DateTime.UtcNow)
+		{
+			return BadRequest("Due date cannot be in the past.");
+		}
 		var command = model.GetCommand(id);
 		var result = await _mediator.Send(command, cancellationToken);
 		return Ok(result);
@@ -134,6 +179,15 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
 	public async Task<ActionResult> DeleteTaskItem([FromRoute] int id, CancellationToken cancellationToken = default)
 	{
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
+		{
+			return BadRequest("Invalid task item ID.");
+		}
+		var taskItem = await _mediator.Send(new GetTaskItemByIdQuery(id), cancellationToken);
+		if (taskItem is null)
+		{
+			return NotFound($"Task item with ID {id} not found.");
+		}
 		var command = new DeleteTaskItemCommand(id);
 		await _mediator.Send(command, cancellationToken);
 		return NoContent();

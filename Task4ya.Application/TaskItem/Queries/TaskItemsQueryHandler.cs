@@ -7,7 +7,7 @@ namespace Task4ya.Application.TaskItem.Queries;
 
 public class TaskItemsQueryHandler : 
 	IRequestHandler<GetAllTaskItemsQuery, PagedResponseDto<TaskItemDto>>,
-	IRequestHandler<GetTaskItemByIdQuery, TaskItemDto>
+	IRequestHandler<GetTaskItemByIdQuery, TaskItemDto?>
 {
 	private readonly ITaskItemRepository _taskItemRepository;
 
@@ -18,7 +18,6 @@ public class TaskItemsQueryHandler :
 
 	public async Task<PagedResponseDto<TaskItemDto>> Handle(GetAllTaskItemsQuery request, CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(request, nameof(request));
 		var items = await _taskItemRepository.GetAllAsync(
 			request.Page, 
 			request.PageSize, 
@@ -35,10 +34,9 @@ public class TaskItemsQueryHandler :
 		};
 	}
 	
-	public async Task<TaskItemDto> Handle(GetTaskItemByIdQuery request, CancellationToken cancellationToken)
+	public async Task<TaskItemDto?> Handle(GetTaskItemByIdQuery request, CancellationToken cancellationToken)
 	{
-		ArgumentNullException.ThrowIfNull(request, nameof(request));
 		var taskItem = await _taskItemRepository.GetByIdAsync(request.Id);
-		return taskItem.MapToDto();
+		return taskItem?.MapToDto();
 	}
 }

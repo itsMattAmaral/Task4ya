@@ -11,9 +11,9 @@ public class TaskItemRepository : ITaskItemRepository
 
 	public TaskItemRepository(Task4YaDbContext dbContext) => _dbContext = dbContext;
 	
-	public async Task<TaskItem> GetByIdAsync(int id)
+	public async Task<TaskItem?> GetByIdAsync(int id)
 	{
-		return await _dbContext.TaskItems.FindAsync(id) ?? throw new KeyNotFoundException($"TaskItem with ID {id} not found.");
+		return await _dbContext.TaskItems.FindAsync(id);
 	}
 
 	public async Task<IEnumerable<TaskItem>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
