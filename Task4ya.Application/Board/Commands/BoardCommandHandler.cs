@@ -59,11 +59,15 @@ public class BoardCommandHandler :
 		{
 			throw new KeyNotFoundException($"TaskItem with ID {request.TaskItemId} not found.");
 		}
-		
 		if (board.TaskGroup.Any(t => t.Id == taskItem.Id))
 		{
 			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already exists in the board.");
 		}
+		if (taskItem.BoardId != 0)
+		{
+			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already belongs to another board.");
+		}
+		
 		taskItem.BoardId = board.Id;
 		board.AddTaskItem(taskItem);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
