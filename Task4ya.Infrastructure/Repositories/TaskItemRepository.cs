@@ -53,6 +53,13 @@ public class TaskItemRepository : ITaskItemRepository
 		}
 		return await query.CountAsync();
 	}
+	
+	public async Task UpdateAsync(TaskItem taskItem)
+	{
+        ArgumentNullException.ThrowIfNull(taskItem);
+        _dbContext.TaskItems.Update(taskItem);
+		await _dbContext.SaveChangesAsync();
+	}
 
 	public Task<IEnumerable<TaskItem>> GetByBoardIdAsync(int boardId)
 	{

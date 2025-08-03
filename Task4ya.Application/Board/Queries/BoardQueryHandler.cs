@@ -10,10 +10,12 @@ public class BoardQueryHandler :
 	IRequestHandler<GetBoardByIdQuery, BoardDto?>
 {
 	private readonly IBoardRepository _boardRepository;
+	private readonly ITaskItemRepository _taskItemRepository;
 	
-	public BoardQueryHandler(IBoardRepository boardRepository)
+	public BoardQueryHandler(IBoardRepository boardRepository, ITaskItemRepository taskItemRepository)
 	{
 		_boardRepository = boardRepository ?? throw new ArgumentNullException(nameof(boardRepository));
+		_taskItemRepository = taskItemRepository ?? throw new ArgumentNullException(nameof(taskItemRepository));
 	}
 	
 	public async Task<PagedResponseDto<BoardDto>> Handle(GetAllBoardsQuery request, CancellationToken cancellationToken)

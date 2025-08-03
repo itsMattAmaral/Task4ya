@@ -18,17 +18,9 @@ public class Board
 		TaskGroup.Add(taskItem);
 	}
 	
-	public void RemoveTaskItem(int taskItemId)
+	public void RemoveTaskItem(TaskItem taskItem)
 	{
-		var taskItem = TaskGroup.FirstOrDefault(t => t.Id == taskItemId);
-		if (taskItem is not null)
-		{
-			TaskGroup.Remove(taskItem);
-		}
-		else
-		{
-			throw new HttpRequestException("TaskItem not found.", null, System.Net.HttpStatusCode.NotFound);
-		}
+		TaskGroup.Remove(taskItem);
 	}
 	
 	public void ClearTaskItems()
