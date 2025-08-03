@@ -60,9 +60,4 @@ public class TaskItemRepository : ITaskItemRepository
         _dbContext.TaskItems.Update(taskItem);
 		await _dbContext.SaveChangesAsync();
 	}
-
-	public Task<IEnumerable<TaskItem>> GetByBoardIdAsync(int boardId)
-	{
-		throw new NotImplementedException();
-	}
 }
