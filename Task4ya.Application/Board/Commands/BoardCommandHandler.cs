@@ -11,6 +11,7 @@ public class BoardCommandHandler :
 	IRequestHandler<AddBoardCommand, BoardDto>,
 	IRequestHandler<DeleteBoardCommand>,
 	IRequestHandler<AddTaskItemToBoardCommand>,
+	IRequestHandler<UpdateBoardNameCommand, BoardDto>,
 	IRequestHandler<RemoveTaskItemToBoardCommand>
 {
 	private readonly Task4YaDbContext _dbcontext;
@@ -30,14 +31,20 @@ public class BoardCommandHandler :
 		var newBoard = new Domain.Entities.Board(request.Name);
 		_dbcontext.Add(newBoard);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
+
 		foreach (var taskId in request.TaskItemIds)
 		{
 			var taskItem = await _taskItemRepository.GetByIdAsync(taskId);
+
 			if (taskItem == null)
 			{
 				throw new KeyNotFoundException($"TaskItem with ID {taskId} not found.");
 			}
-			
+			if (taskItem.BoardId != 0)
+			{
+				throw new InvalidOperationException($"TaskItem with ID {taskId} already belongs to another board.");
+			}
+
 			taskItem.BoardId = newBoard.Id;
 			newBoard.AddTaskItem(taskItem);
 		}
@@ -50,50 +57,85 @@ public class BoardCommandHandler :
 		ArgumentNullException.ThrowIfNull(request);
 
 		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+
 		if (board == null)
 		{
 			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
 		}
 		var taskItem = await _taskItemRepository.GetByIdAsync(request.TaskItemId);
+
 		if (taskItem == null)
 		{
 			throw new KeyNotFoundException($"TaskItem with ID {request.TaskItemId} not found.");
 		}
+
 		if (board.TaskGroup.Any(t => t.Id == taskItem.Id))
 		{
 			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already exists in the board.");
 		}
+
 		if (taskItem.BoardId != 0)
 		{
 			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already belongs to another board.");
 		}
-		
+
 		taskItem.BoardId = board.Id;
 		board.AddTaskItem(taskItem);
 		await _dbcontext.SaveChangesAsync(cancellationToken);
 	}
-	
+
+	public async Task<BoardDto> Handle(UpdateBoardNameCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+
+		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+
+		if (board == null)
+		{
+			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
+		}
+		if (board.Name == request.NewName)
+		{
+			throw new InvalidOperationException(
+				$"Board with ID {request.BoardId} already has the name '{request.NewName}'.");
+		}
+		var isNewNameUnique = await _boardRepository.IsNameUniqueAsync(request.NewName, request.BoardId);
+		if (!isNewNameUnique)
+		{
+			throw new InvalidOperationException($"Board name '{request.NewName}' is already in use.");
+		}
+		
+		board.RenameBoard(request.NewName);
+		await _dbcontext.SaveChangesAsync(cancellationToken);
+		return board.MapToDto();
+	}
+
 	public async Task Handle(RemoveTaskItemToBoardCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
 		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+
 		if (board == null)
 		{
 			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
 		}
+
 		if (board.TaskGroup.All(t => t.Id != request.TaskItemId))
 		{
 			throw new InvalidOperationException($"TaskItem with ID {request.TaskItemId} does not exist in the board.");
 		}
 		var taskItem = await _taskItemRepository.GetByIdAsync(request.TaskItemId);
-		if (taskItem == null) 
+
+		if (taskItem == null)
 		{
 			throw new KeyNotFoundException($"TaskItem with ID {request.TaskItemId} not found.");
 		}
+
 		if (taskItem.BoardId != board.Id)
 		{
-			throw new InvalidOperationException($"TaskItem with ID {request.TaskItemId} does not belong to the board with ID {request.BoardId}.");
+			throw new InvalidOperationException(
+				$"TaskItem with ID {request.TaskItemId} does not belong to the board with ID {request.BoardId}.");
 		}
 		board.RemoveTaskItem(taskItem);
 		taskItem.BoardId = 0;
@@ -104,13 +146,16 @@ public class BoardCommandHandler :
 	{
 		ArgumentNullException.ThrowIfNull(request);
 		var board = await _boardRepository.GetByIdAsync(request.Id);
+
 		if (board == null)
 		{
 			throw new KeyNotFoundException($"Board with ID {request.Id} not found.");
 		}
+
 		if (board.TaskGroup.Count != 0)
 		{
 			var taskItems = board.TaskGroup.ToList();
+
 			foreach (var taskItem in taskItems)
 			{
 				taskItem.BoardId = 0;

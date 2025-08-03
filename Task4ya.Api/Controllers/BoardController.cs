@@ -144,6 +144,40 @@ public class BoardController : ControllerBase
 	}
 	
 	[Authorize]
+	[HttpPut("{id}")]
+	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<BoardDto>> UpdateBoardName([FromRoute] int id, [FromBody] UpdateBoardNameModel? model)
+	{
+		if (id <= 0 || model is null || string.IsNullOrWhiteSpace(model.NewName))
+		{
+			return BadRequest("Invalid board ID or name.");
+		}
+		
+		var command = new UpdateBoardNameCommand(id, model.NewName);
+		
+		try
+		{
+			var result = await _mediator.Send(command);
+			return Ok(result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while updating the board name: {ex.Message}");
+		}
+	}
+	
+	[Authorize]
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]

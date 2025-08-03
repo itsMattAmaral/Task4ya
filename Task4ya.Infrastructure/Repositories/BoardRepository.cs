@@ -68,4 +68,16 @@ public class BoardRepository : IBoardRepository
 		_dbContext.Boards.Remove(board);
 		await _dbContext.SaveChangesAsync();
 	}
+	
+	public async Task<bool> IsNameUniqueAsync(string newName, int? boardId = null)
+	{
+		var query = _dbContext.Boards.AsQueryable();
+		
+		if (boardId.HasValue)
+		{
+			query = query.Where(b => b.Id != boardId.Value);
+		}
+		
+		return !await query.AnyAsync(b => b.Name == newName);
+	}
 }
