@@ -38,8 +38,11 @@ namespace Task4ya.Api;
 			builder.Services.AddDbContext<Task4YaDbContext>(
 				options => options.UseNpgsql(
 					connectionString, 
-					npgsqlOptions => npgsqlOptions.MigrationsAssembly("Task4ya.Infrastructure")
-					));
+					npgsqlOptions =>
+					{
+						npgsqlOptions.MigrationsAssembly("Task4ya.Infrastructure");
+						npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+					}));
 
 			builder.Services.AddAuthentication(config =>
 			{
