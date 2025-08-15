@@ -1,3 +1,5 @@
+using Task4ya.Domain.Utils;
+
 namespace Task4ya.Domain.Entities;
 
 public class User
@@ -13,7 +15,7 @@ public class User
 	{
 		Name = name;
 		Email = email;
-		Password = password;
+		Password = PasswordHandler.HashPassword(password);
 	}
 	
 	public void UpdateUserName(string newName)
@@ -30,7 +32,7 @@ public class User
 	
 	public void UpdatePassword(string newPassword)
 	{
-		Password = newPassword;
+		Password = PasswordHandler.HashPassword(newPassword);
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
