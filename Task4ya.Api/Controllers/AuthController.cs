@@ -27,7 +27,11 @@ public class AuthController(AuthHelpers authHelpers) : ControllerBase
 		var user = await _authHelpers.GetUserByEmailAsync(model.Email);
 		if (user == null) throw new UserNotFoundException($"User with email {model.Email} not found.");
 		var isPasswordValid = PasswordHandler.VerifyPassword(model.Password, user.Password);
-		if (isPasswordValid) throw new InvalidCredentialsException("Invalid email or password.");
+
+		if (!isPasswordValid)
+		{
+			return BadRequest("Invalid email or password.");
+		}
 
 		var token = _authHelpers.GenerateJwtToken(user);
 		

@@ -1,6 +1,6 @@
 namespace Task4ya.Domain.Utils;
 
-public class PasswordHandler
+public static class PasswordHandler
 {
 	public static string HashPassword(string password)
 	{

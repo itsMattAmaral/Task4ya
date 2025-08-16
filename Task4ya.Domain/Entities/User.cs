@@ -15,7 +15,7 @@ public class User
 	{
 		Name = name;
 		Email = email;
-		Password = PasswordHandler.HashPassword(password);
+		Password = password;
 	}
 	
 	public void UpdateUserName(string newName)
@@ -32,7 +32,7 @@ public class User
 	
 	public void UpdatePassword(string newPassword)
 	{
-		Password = PasswordHandler.HashPassword(newPassword);
+		Password = newPassword;
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
