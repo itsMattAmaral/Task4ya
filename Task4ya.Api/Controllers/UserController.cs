@@ -1,9 +1,11 @@
 using System.Net;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Task4ya.Api.Models.User;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.User.Queries;
+using Task4ya.Domain.Exceptions;
 
 namespace Task4ya.Api.Controllers;
 
@@ -19,6 +21,7 @@ public class UserController : ControllerBase
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
 	
+    [Authorize]
 	[HttpPost]
 	[Route("register")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.Created)]
@@ -104,5 +107,87 @@ public class UserController : ControllerBase
 		}
 
 		return Ok(result);
+	}
+	
+	[Authorize]
+	[HttpPut("{id:int}")]
+	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.NotFound)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UpdateUserModel model)
+	{
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
+		{
+			return BadRequest("Invalid user ID.");
+		}
+		if (string.IsNullOrWhiteSpace(model.Name) || string.IsNullOrWhiteSpace(model.Email))
+		{
+			return BadRequest("Invalid user data. Name and Email cannot be empty.");
+		}
+		
+		var command = model.GetCommand();
+		command.Id = id;
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return Ok(result);
+		}
+		catch (UserNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred: {ex.Message}");
+		}
+	}
+	
+	[Authorize]
+	[HttpPut("{id:int}/password")]
+	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.NotFound)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<UserDto>> UpdateUserPassword(int id, [FromBody] UpdateUserPasswordModel model)
+	{
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
+		{
+			return BadRequest("Invalid user ID.");
+		}
+		
+		if (string.IsNullOrWhiteSpace(model.OldPassword) || string.IsNullOrWhiteSpace(model.NewPassword))
+		{
+			return BadRequest("Old and New Passwords cannot be empty.");
+		}
+		
+		if (model.NewPassword.Length < 6)
+		{
+			return BadRequest("New Password must be at least 6 characters long.");
+		}
+		
+		var command = model.GetCommand();
+		command.Id = id;
+		
+		try
+		{
+			var result = await _mediator.Send(command);
+			return Ok(result);
+		}
+		catch (UserNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred: {ex.Message}");
+		}
 	}
 }
