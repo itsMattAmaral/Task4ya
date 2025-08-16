@@ -7,6 +7,7 @@ using Task4ya.Application.Dtos;
 using Task4ya.Application.TaskItem.Commands.Actions;
 using Task4ya.Application.TaskItem.Queries;
 using Task4ya.Domain.Enums;
+using Task4ya.Domain.Exceptions;
 
 namespace Task4ya.Api.Controllers;
 
@@ -28,12 +29,10 @@ public class TaskItemController : ControllerBase
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemModel? model)
+	public async Task<ActionResult<TaskItemDto>> AddTaskItem([FromBody] AddTaskItemModel model)
 	{
-		if (model is null || model.BoardId <= 0 || string.IsNullOrWhiteSpace(model.Title))
-		{
-			return BadRequest("Invalid task item data. BoardId must be greater than 0 and Title cannot be empty.");
-		}
+		if (model.BoardId <= 0 ) BadRequest("Invalid task item. BoardId must be greater than 0");
+		if (string.IsNullOrWhiteSpace(model.Title)) BadRequest("Invalid task item. Title cannot be empty.");
 		var command = model.GetCommand();
 
 		try
@@ -239,6 +238,42 @@ public class TaskItemController : ControllerBase
 				$"An error occurred while updating the task due date: {ex.Message}");
 		}
 
+	}
+
+	[Authorize]
+	[HttpPatch("{id}/assignee")]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult> UpdateTaskAssignee([FromRoute] int id, [FromBody] UpdateTaskItemAssigneeModel model)
+	{
+		if (id <= 0 || model.NewAssigneeId <= 0)
+		{
+			return BadRequest("Invalid task item ID or assignee ID. Both must be greater than 0.");
+		}
+		
+		var command = model.GetCommand();
+		command.Id = id;
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return Ok(result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (UserNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError,
+				$"An error occurred while updating the task assignee: {ex.Message}");
+		}
 	}
 	
 	[Authorize]

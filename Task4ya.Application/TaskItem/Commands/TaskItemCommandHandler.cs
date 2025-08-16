@@ -2,29 +2,39 @@ using MediatR;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.Mappers;
 using Task4ya.Application.TaskItem.Commands.Actions;
+using Task4ya.Domain.Exceptions;
 using Task4ya.Domain.Repositories;
 using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Application.TaskItem.Commands;
 
-public class TaskItemCommandHandler : 
-	IRequestHandler<AddTaskItemCommand, TaskItemDto>,
-	IRequestHandler<UpdateTaskItemCommand, TaskItemDto>,
-	IRequestHandler<UpdateTaskStatusCommand, TaskItemDto>,
-	IRequestHandler<UpdateTaskPriorityCommand, TaskItemDto>,
-	IRequestHandler<DeleteTaskItemCommand>
+public class TaskItemCommandHandler(
+	Task4YaDbContext dbcontext,
+	IBoardRepository boardRepository,
+	IUserRepository userRepository,
+	ITaskItemRepository taskItemRepository)
+	:
+		IRequestHandler<AddTaskItemCommand, TaskItemDto>,
+		IRequestHandler<UpdateTaskItemCommand, TaskItemDto>,
+		IRequestHandler<UpdateTaskStatusCommand, TaskItemDto>,
+		IRequestHandler<UpdateTaskPriorityCommand, TaskItemDto>,
+		IRequestHandler<UpdateTaskDueDateCommand, TaskItemDto?>,
+		IRequestHandler<UpdateTaskItemAssigneeToIdCommand, TaskItemDto>,
+		IRequestHandler<DeleteTaskItemCommand>
 {
-	private readonly Task4YaDbContext _dbcontext;
-	private readonly IBoardRepository _boardRepository;
-	public TaskItemCommandHandler(Task4YaDbContext dbcontext, IBoardRepository boardRepository, ITaskItemRepository taskItemRepository)
-	{
-		_boardRepository = boardRepository;
-		_dbcontext = dbcontext;
-	}
-	
 	public async Task<TaskItemDto> Handle(AddTaskItemCommand request, CancellationToken cancellationToken)
 	{
 		await ValidateBoardExists(request.BoardId);
+		
+		int? validatedAssigneeId = null;
+        
+		if (request.AssigneeToId is > 0)
+		{
+			var user = await userRepository.GetByIdAsync(request.AssigneeToId.Value);
+			if (user is null) 
+				throw new UserNotFoundException($"User with ID {request.AssigneeToId} does not exist.");
+			validatedAssigneeId = request.AssigneeToId.Value;
+		}
 		
 		var newTask = new Domain.Entities.TaskItem(
 			request.BoardId,
@@ -32,13 +42,14 @@ public class TaskItemCommandHandler :
 			request.Description,
 			request.DueDate,
 			request.Priority,
-			request.Status
+			request.Status,
+			validatedAssigneeId
 		);
-		_dbcontext.Add(newTask);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
-		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+		dbcontext.Add(newTask);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+		var board = await boardRepository.GetByIdAsync(request.BoardId);
 		board?.AddTaskItem(newTask);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return newTask.MapToDto();
 	}
 	
@@ -46,7 +57,17 @@ public class TaskItemCommandHandler :
 	{
         ArgumentNullException.ThrowIfNull(request);
         await ValidateBoardExists(request.BoardId);
-        var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+        int? validatedAssigneeId = null;
+        
+        if (request.AssigneeToId is > 0)
+        {
+	        var user = await userRepository.GetByIdAsync(request.AssigneeToId.Value);
+	        if (user is null) 
+		        throw new UserNotFoundException($"User with ID {request.AssigneeToId} does not exist.");
+	        validatedAssigneeId = request.AssigneeToId.Value;
+        }
+        
+        var task = await taskItemRepository.GetByIdAsync(request.Id);
 		if (task == null)
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
@@ -58,48 +79,49 @@ public class TaskItemCommandHandler :
 			newDescription: request.Description,
 			newDueDate: request.DueDate,
 			newPriority: request.Priority,
-			newStatus: request.Status
+			newStatus: request.Status,
+			newAssigneeToId: validatedAssigneeId
 		);
 
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return task.MapToDto();
 	}
 
 	public async Task<TaskItemDto> Handle(UpdateTaskStatusCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
-		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+		var task = await taskItemRepository.GetByIdAsync(request.Id);
 		if (task == null)
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
 		task.UpdateStatus(request.Status);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return task.MapToDto();
 	}
 
 	public async Task<TaskItemDto> Handle(UpdateTaskPriorityCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
-		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+		var task = await taskItemRepository.GetByIdAsync(request.Id);
 		if (task == null)
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
 		task.UpdatePriority(request.Priority);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return task.MapToDto();
 	}
 
 	public async Task<TaskItemDto?> Handle(UpdateTaskDueDateCommand request, CancellationToken cancellationToken)
 	{
-		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+		var task = await taskItemRepository.GetByIdAsync(request.Id);
 		if (task == null)
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
 		task.UpdateDueDate(request.DueDate);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return task.MapToDto();
 	}
 
@@ -107,22 +129,42 @@ public class TaskItemCommandHandler :
 	{
         ArgumentNullException.ThrowIfNull(request);
         
-		var task = await _dbcontext.TaskItems.FindAsync(request.Id, cancellationToken);
+        var task = await taskItemRepository.GetByIdAsync(request.Id);
 
 		if (task == null)
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
-		_dbcontext.TaskItems.Remove(task);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		dbcontext.TaskItems.Remove(task);
+		await dbcontext.SaveChangesAsync(cancellationToken);
     }
 	
 	private async Task ValidateBoardExists(int boardId)
 	{
-		var board = await _boardRepository.GetByIdAsync(boardId);
+		var board = await boardRepository.GetByIdAsync(boardId);
 		if (board == null)
 		{
 			throw new KeyNotFoundException($"Board with ID {boardId} not found.");
 		}
+	}
+
+	public async Task<TaskItemDto> Handle(UpdateTaskItemAssigneeToIdCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+		var task = await taskItemRepository.GetByIdAsync(request.Id);
+		if (task == null)
+		{
+			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
+		}
+		if (request.NewAssigneeId <= 0) throw new ArgumentException("New assignee ID must be greater than 0.", nameof(request.NewAssigneeId));
+		if (task.AssigneeToId == request.NewAssigneeId) throw new InvalidOperationException($"Task with ID {request.Id} is already assigned to user with ID {request.NewAssigneeId}.");
+		
+		var assigneeExists = await userRepository.GetByIdAsync(request.NewAssigneeId) != null;
+		
+		if (!assigneeExists) throw new UserNotFoundException("Assignee with the specified ID does not exist.");
+		
+		task.UpdateAssigneeToId(request.NewAssigneeId);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+		return task.MapToDto();
 	}
 }

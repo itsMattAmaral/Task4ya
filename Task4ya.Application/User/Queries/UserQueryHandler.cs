@@ -1,6 +1,7 @@
 using MediatR;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.Mappers;
+using Task4ya.Domain.Exceptions;
 using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Application.User.Queries;
@@ -36,6 +37,8 @@ public class UserQueryHandler :
 		ArgumentNullException.ThrowIfNull(request, nameof(request));
 		
 		var user = await _userRepository.GetByIdAsync(request.Id);
+		if (user is null) throw new UserNotFoundException();
+		
 		return user.MapToDto();
 	}
 }

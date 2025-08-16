@@ -12,6 +12,7 @@ public static class TaskItemMapper
 		return new TaskItemDto
 		{
 			Id = entity.Id,
+			AssigneeToId = entity.AssigneeToId,
 			BoardId = entity.BoardId,
 			Title = entity.Title,
 			Description = entity.Description,

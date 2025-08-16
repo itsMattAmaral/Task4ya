@@ -8,13 +8,14 @@ public class TaskItem
 	public int BoardId { get; set; }
 	public string Title { get; set; }
 	public string? Description { get; set; }
+	public int? AssigneeToId { get; set; }
 	public DateTime CreatedAt { get; init; }
 	public DateTime UpdatedAt { get; set; }
 	public DateTime? DueDate { get; set; }
 	public TaskItemStatus Status { get; set; }
 	public TaskItemPriority Priority { get; set; }
 
-	public TaskItem(int boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending)
+	public TaskItem(int boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending, int? assigneeToId = null)
 	{
 		StringValidator.ThrowIfNullOrWhiteSpace(title, "Title");
 		BoardId = boardId;
@@ -25,9 +26,10 @@ public class TaskItem
 		Priority = priority;
 		CreatedAt = DateTime.UtcNow;
 		UpdatedAt = DateTime.UtcNow;
+		AssigneeToId = assigneeToId;
 	}
 	
-	public void UpdateTaskItem(int? newBoardId, string? newTitle = null, string? newDescription = null, DateTime? newDueDate = null, TaskItemPriority? newPriority = null, TaskItemStatus? newStatus = null)
+	public void UpdateTaskItem(int? newBoardId, string? newTitle = null, string? newDescription = null, DateTime? newDueDate = null, TaskItemPriority? newPriority = null, TaskItemStatus? newStatus = null, int? newAssigneeToId = null)
 	{
 		if (newTitle is not null) UpdateTaskTitle(newTitle);
 		if (newDescription is not null) UpdateTaskDescription(newDescription);
@@ -35,24 +37,7 @@ public class TaskItem
 		if (newPriority is not null) UpdatePriority(newPriority.Value);
 		if (newStatus is not null) UpdateStatus(newStatus.Value);
 		if (newBoardId is not null) UpdateBoardId(newBoardId.Value);
-	}
-
-	public void UpdateBoardId(int newBoardId)
-	{
-		BoardId = newBoardId;
-		UpdatedAt = DateTime.UtcNow;
-	}
-
-	public void UpdateTaskTitle(string newTitle)
-	{
-		Title = newTitle;
-		UpdatedAt = DateTime.UtcNow;
-	}
-	
-	public void UpdateTaskDescription(string? newDescription)
-	{
-		Description = newDescription;
-		UpdatedAt = DateTime.UtcNow;
+		if (newAssigneeToId is not null) UpdateAssigneeToId(newAssigneeToId.Value);
 	}
 	
 	public void UpdateDueDate(DateTime? newDueDate)
@@ -83,4 +68,27 @@ public class TaskItem
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
+	public void UpdateAssigneeToId(int newAssigneeToId)
+	{
+		AssigneeToId = newAssigneeToId;
+		UpdatedAt = DateTime.UtcNow;
+	}
+	
+	private void UpdateBoardId(int newBoardId)
+	{
+		BoardId = newBoardId;
+		UpdatedAt = DateTime.UtcNow;
+	}
+
+	private void UpdateTaskTitle(string newTitle)
+	{
+		Title = newTitle;
+		UpdatedAt = DateTime.UtcNow;
+	}
+
+	private void UpdateTaskDescription(string? newDescription)
+	{
+		Description = newDescription;
+		UpdatedAt = DateTime.UtcNow;
+	}
 }

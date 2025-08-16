@@ -20,8 +20,7 @@ public class UserController : ControllerBase
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
-	
-    [Authorize]
+    
 	[HttpPost]
 	[Route("register")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.Created)]

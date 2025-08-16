@@ -8,6 +8,7 @@ public class AddTaskItemModel
 {
 	[Required(ErrorMessage = "Board ID is required.")]
 	public int BoardId { get; set; }
+	public int? AssigneeToId { get; set; } = null;
 	
 	[Required(ErrorMessage = "Title is required.")]
 	[MaxLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
@@ -30,6 +31,6 @@ public class AddTaskItemModel
 
 	public AddTaskItemCommand GetCommand()
 	{
-		return new AddTaskItemCommand(BoardId, Title, Description, DueDate, Priority, Status);
+		return new AddTaskItemCommand(BoardId, Title, Description, DueDate, Priority, Status, AssigneeToId);
 	}
 }

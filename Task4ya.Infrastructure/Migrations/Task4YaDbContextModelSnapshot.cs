@@ -63,6 +63,9 @@ namespace Task4ya.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("AssigneeToId")
+                        .HasColumnType("integer");
+
                     b.Property<int>("BoardId")
                         .HasColumnType("integer");
 
@@ -72,8 +75,8 @@ namespace Task4ya.Infrastructure.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("timestamp with time zone");
@@ -86,8 +89,8 @@ namespace Task4ya.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -95,6 +98,10 @@ namespace Task4ya.Infrastructure.Migrations
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AssigneeToId");
+
+                    b.HasIndex("BoardId");
 
                     b.ToTable("TaskItems");
                 });
@@ -134,6 +141,9 @@ namespace Task4ya.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users");
                 });
 
@@ -148,6 +158,20 @@ namespace Task4ya.Infrastructure.Migrations
                     b.HasOne("Task4ya.Domain.Entities.TaskItem", null)
                         .WithMany()
                         .HasForeignKey("TaskGroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Task4ya.Domain.Entities.TaskItem", b =>
+                {
+                    b.HasOne("Task4ya.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("AssigneeToId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Task4ya.Domain.Entities.Board", null)
+                        .WithMany()
+                        .HasForeignKey("BoardId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

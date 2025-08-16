@@ -14,11 +14,10 @@ public class UserRepository : IUserRepository
 		_dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
 	}
 	
-	public async Task<User> GetByIdAsync(int id)
+	public async Task<User?> GetByIdAsync(int id)
 	{
 		return await _dbContext.Users
-			.FirstOrDefaultAsync(u => u.Id == id) 
-			?? throw new KeyNotFoundException($"User with ID {id} not found.");
+			.FirstOrDefaultAsync(u => u.Id == id);
 	}
 
 	public async Task<List<User>> GetAllAsync(int page, int pageSize, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
@@ -62,9 +61,9 @@ public class UserRepository : IUserRepository
 			.FirstOrDefaultAsync(u => u.Email.Equals(email));
 	}
 	
-	public async Task<bool> ExistsAsync(string newUserEmail, CancellationToken cancellationToken)
+	public async Task<bool> ExistsAsync(string emailOrName, CancellationToken cancellationToken)
 	{
 		return await _dbContext.Users
-			.AnyAsync(u => u.Email.Equals(newUserEmail), cancellationToken);
+			.AnyAsync(u => u.Email.Equals(emailOrName) || u.Name.Equals(emailOrName), cancellationToken);
 	}
 }
