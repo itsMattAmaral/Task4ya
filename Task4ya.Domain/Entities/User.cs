@@ -1,5 +1,3 @@
-using Task4ya.Domain.Utils;
-
 namespace Task4ya.Domain.Entities;
 
 public class User
