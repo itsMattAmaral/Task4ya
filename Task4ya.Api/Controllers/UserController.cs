@@ -138,7 +138,7 @@ public class UserController : ControllerBase
 		}
 	}
 	
-	[Authorize(Policy="UserOnly")]
+	[Authorize(Policy="AnyUser")]
 	[HttpGet]
 	[ProducesResponseType(typeof(PagedResponseDto<UserDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -169,7 +169,7 @@ public class UserController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize(Policy="UserOnly")]
+	[Authorize(Policy="AnyUser")]
 	[HttpGet("{id:int}")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -229,7 +229,7 @@ public class UserController : ControllerBase
 		}
 	}
 	
-	[Authorize(Policy="UserOnly")]
+	[Authorize(Policy="AnyUser")]
 	[HttpPut("{id:int}/password")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]

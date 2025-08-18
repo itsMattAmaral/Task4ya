@@ -88,7 +88,7 @@ public class BoardController : ControllerBase
 		return NoContent();
 	}
 	
-	[Authorize(Policy = "UserOnly")]
+	[Authorize(Policy = "AnyUser")]
 	[HttpGet]
 	[ProducesResponseType(typeof(PagedResponseDto<BoardDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -122,7 +122,7 @@ public class BoardController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize(Policy = "UserOnly")]
+	[Authorize(Policy = "AnyUser")]
 	[HttpGet("{id}")]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
