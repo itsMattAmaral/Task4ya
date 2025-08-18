@@ -31,6 +31,8 @@ public class AuthHelpers
 			new Claim(ClaimTypes.Email, user.Email)
 			
 		};
+		claims.AddRange(user.Roles.Select(role => role.ToString()).Select(roleName => new Claim(ClaimTypes.Role, roleName)));
+
 		var key = new SymmetricSecurityKey(
 			Encoding.UTF8.GetBytes(_configuration["ApplicationSettings:JWT_Secret"] ?? string.Empty));
 		var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

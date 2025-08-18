@@ -55,7 +55,7 @@ public class UserController : ControllerBase
 		}
 	}
 
-	[Authorize]
+	[Authorize(Roles = "Admin")]
 	[HttpPost]
 	[Route("{id:int}/roles")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
@@ -96,6 +96,47 @@ public class UserController : ControllerBase
 		}
 	}
 
+	[Authorize(Roles = "Admin")]
+	[HttpDelete]
+	[Route("{id:int}/roles/remove")]
+	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.NotFound)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<UserDto>> RemoveRoleFromUser(int id, [FromBody] RemoveRoleToUserModel model)
+	{
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
+		{
+			return BadRequest("Invalid user ID.");
+		}
+		if (string.IsNullOrWhiteSpace(model.Role))
+		{
+			return BadRequest("Role cannot be empty.");
+		}
+		
+		var command = model.GetCommand();
+		command.UserId = id;
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return Ok(result);
+		}
+		catch (UserNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred: {ex.Message}");
+		}
+	}
+	
 	[HttpGet]
 	[ProducesResponseType(typeof(PagedResponseDto<UserDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -149,7 +190,7 @@ public class UserController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize]
+	[Authorize(Roles = "Admin")]
 	[HttpPut("{id:int}")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -185,7 +226,7 @@ public class UserController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Roles = "User")]
 	[HttpPut("{id:int}/password")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]

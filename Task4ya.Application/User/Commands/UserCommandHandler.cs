@@ -13,6 +13,7 @@ public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository user
 	IRequestHandler<AddUserCommand, UserDto>,
 	IRequestHandler<UpdateUserCommand, UserDto>,
 	IRequestHandler<AddRoleToUserCommand, UserDto>,
+	IRequestHandler<RemoveRoleToUserCommand, UserDto>,
 	IRequestHandler<UpdateUserPassword, UserDto>
 {
 	public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
@@ -51,6 +52,26 @@ public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository user
 		}
 		
 		user.AddRole(role);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+		
+		return user.MapToDto();
+	}
+	
+	public async Task<UserDto> Handle(RemoveRoleToUserCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+		var user = await userRepository.GetByIdAsync(request.UserId);
+		if (user is null)
+		{
+			throw new UserNotFoundException($"User with ID {request.UserId} does not exist.");
+		}
+		
+		if (!Enum.TryParse<Domain.Enums.Roles>(request.Role, true, out var role))
+		{
+			throw new InvalidOperationException($"Role '{request.Role}' is not a valid role.");
+		}
+		
+		user.RemoveRole(role);
 		await dbcontext.SaveChangesAsync(cancellationToken);
 		
 		return user.MapToDto();

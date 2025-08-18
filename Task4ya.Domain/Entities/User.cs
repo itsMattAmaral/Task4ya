@@ -6,7 +6,7 @@ public class User(string name, string email, string password)
 {
 	public int Id { get; init; }
 	public string Name { get; set; } = name;
-	public string Email { get; set; } = email;
+	public string Email { get; set; } = email.ToLower();
 	public string Password { get; set; } = password;
 	public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 	public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
@@ -21,7 +21,7 @@ public class User(string name, string email, string password)
 	
 	public void UpdateEmail(string newEmail)
 	{
-		Email = newEmail;
+		Email = newEmail.ToLower();
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
