@@ -46,6 +46,7 @@ public class Task4YaDbContext(DbContextOptions<Task4YaDbContext> options) : DbCo
 		modelBuilder.Entity<User>(entity =>
 		{
 			entity.HasKey(e => e.Id);
+			entity.Property(e => e.Roles).IsRequired();
 			entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
 			entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
 			entity.Property(e => e.Password).IsRequired().HasMaxLength(200);

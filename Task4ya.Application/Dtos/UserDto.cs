@@ -1,3 +1,5 @@
+using Task4ya.Domain.Enums;
+
 namespace Task4ya.Application.Dtos;
 
 public class UserDto
@@ -7,5 +9,6 @@ public class UserDto
 	public required string Email { get; init; }
 	public DateTime CreatedAt { get; init; }
 	public DateTime UpdatedAt { get; init; }
+	public required List<Roles> Roles { get; init; }
 	
 }

@@ -14,7 +14,8 @@ public static class UserMapper
 			Name = entity.Name,
 			Email = entity.Email,
 			CreatedAt = entity.CreatedAt,
-			UpdatedAt = entity.UpdatedAt
+			UpdatedAt = entity.UpdatedAt,
+			Roles = entity.Roles.Select(role => role).ToList()
 		};
 	}
 }

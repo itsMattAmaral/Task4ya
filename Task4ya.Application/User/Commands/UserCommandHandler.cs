@@ -12,6 +12,7 @@ namespace Task4ya.Application.User.Commands;
 public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository userRepository) :
 	IRequestHandler<AddUserCommand, UserDto>,
 	IRequestHandler<UpdateUserCommand, UserDto>,
+	IRequestHandler<AddRoleToUserCommand, UserDto>,
 	IRequestHandler<UpdateUserPassword, UserDto>
 {
 	public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
@@ -19,13 +20,40 @@ public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository user
 		ArgumentNullException.ThrowIfNull(request);
 		var userPassword = PasswordHandler.HashPassword(request.Password);
 		var newUser = new Domain.Entities.User(request.Name, request.Email, userPassword);
-		if (await userRepository.ExistsAsync(newUser.Email, cancellationToken))
+		IsValidRolesList(request.Roles);
+		foreach (var role in request.Roles)
 		{
-			throw new InvalidOperationException($"User with email {newUser.Email} already exists.");
+			if (Enum.TryParse<Domain.Enums.Roles>(role, true, out var parsedRole))
+			{
+				newUser.AddRole(parsedRole);
+			}
 		}
+		
+		if (await userRepository.ExistsAsync(newUser.Email, cancellationToken)) throw new InvalidOperationException($"User with email {newUser.Email} already exists.");
+
 		dbcontext.Add(newUser);
 		await dbcontext.SaveChangesAsync(cancellationToken);
 		return newUser.MapToDto();
+	}
+	
+	public async Task<UserDto> Handle(AddRoleToUserCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+		var user = await userRepository.GetByIdAsync(request.UserId);
+		if (user is null)
+		{
+			throw new UserNotFoundException($"User with ID {request.UserId} does not exist.");
+		}
+		
+		if (!Enum.TryParse<Domain.Enums.Roles>(request.Role, true, out var role))
+		{
+			throw new InvalidOperationException($"Role '{request.Role}' is not a valid role.");
+		}
+		
+		user.AddRole(role);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+		
+		return user.MapToDto();
 	}
 
 	public async Task<UserDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -62,5 +90,15 @@ public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository user
 		await dbcontext.SaveChangesAsync(cancellationToken);
 		
 		return user.MapToDto();
+	}
+	
+	private static void IsValidRolesList(List<string> roles)
+	{
+		var validRoles = Enum.GetNames<Domain.Enums.Roles>().ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+		foreach (var role in roles.Where(role => !validRoles.Contains(role)))
+		{
+			throw new InvalidOperationException($"Role '{role}' is not a valid role.");
+		}
 	}
 }
