@@ -21,7 +21,7 @@ public class BoardController : ControllerBase
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpPost]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.Created)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -54,7 +54,7 @@ public class BoardController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpPost("AddTaskItemToBoard")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -88,6 +88,7 @@ public class BoardController : ControllerBase
 		return NoContent();
 	}
 	
+	[Authorize(Policy = "UserOnly")]
 	[HttpGet]
 	[ProducesResponseType(typeof(PagedResponseDto<BoardDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -121,6 +122,7 @@ public class BoardController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize(Policy = "UserOnly")]
 	[HttpGet("{id}")]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -143,7 +145,7 @@ public class BoardController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpPut("{id}")]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -177,7 +179,7 @@ public class BoardController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -199,7 +201,7 @@ public class BoardController : ControllerBase
 		return NoContent();
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpDelete("RemoveTaskItemFromBoard")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]

@@ -112,6 +112,19 @@ public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository user
 		
 		return user.MapToDto();
 	}
+
+	public async Task Handle(DeleteUserCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+		var user = await userRepository.GetByIdAsync(request.Id);
+		if (user is null)
+		{
+			throw new UserNotFoundException($"User with ID {request.Id} does not exist.");
+		}
+		
+		dbcontext.Remove(user);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+	}
 	
 	private static void IsValidRolesList(List<string> roles)
 	{

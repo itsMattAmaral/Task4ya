@@ -23,7 +23,7 @@ public class TaskItemController : ControllerBase
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "userOnly")]
 	[HttpPost]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.Created)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -50,7 +50,8 @@ public class TaskItemController : ControllerBase
 				$"An error occurred while adding the task item: {ex.Message}");
 		}
 	}
-
+	
+	[Authorize(Policy = "userOnly")]
 	[HttpGet]
 	[ProducesResponseType(typeof(IEnumerable<TaskItemDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -83,7 +84,8 @@ public class TaskItemController : ControllerBase
 		var result = await _mediator.Send(query);
 		return Ok(result);
 	}
-
+	
+	[Authorize(Policy = "userOnly")]
 	[HttpGet("{id}")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -104,7 +106,7 @@ public class TaskItemController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "userOnly")]
 	[HttpPut("{id}")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -134,7 +136,7 @@ public class TaskItemController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "userOnly")]
 	[HttpPatch("{id}/status")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -168,7 +170,7 @@ public class TaskItemController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "userOnly")]
 	[HttpPatch("{id}/priority")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -203,7 +205,7 @@ public class TaskItemController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "userOnly")]
 	[HttpPatch("{id}/DueDate")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -239,8 +241,7 @@ public class TaskItemController : ControllerBase
 		}
 
 	}
-
-	[Authorize]
+	[Authorize(Policy = "userOnly")]
 	[HttpPatch("{id}/assignee")]
 	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -276,7 +277,7 @@ public class TaskItemController : ControllerBase
 		}
 	}
 	
-	[Authorize]
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]

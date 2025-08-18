@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Task4ya.Api.Models.User;
 using Task4ya.Application.Dtos;
+using Task4ya.Application.User.Commands.Actions;
 using Task4ya.Application.User.Queries;
 using Task4ya.Domain.Exceptions;
 
@@ -55,7 +56,7 @@ public class UserController : ControllerBase
 		}
 	}
 
-	[Authorize(Roles = "Admin")]
+	[Authorize(Policy = "AdminOnly")]
 	[HttpPost]
 	[Route("{id:int}/roles")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
@@ -96,7 +97,7 @@ public class UserController : ControllerBase
 		}
 	}
 
-	[Authorize(Roles = "Admin")]
+	[Authorize(Policy = "AdminOnly")]
 	[HttpDelete]
 	[Route("{id:int}/roles/remove")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
@@ -137,6 +138,7 @@ public class UserController : ControllerBase
 		}
 	}
 	
+	[Authorize(Policy="UserOnly")]
 	[HttpGet]
 	[ProducesResponseType(typeof(PagedResponseDto<UserDto>), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -167,6 +169,7 @@ public class UserController : ControllerBase
 		return Ok(result);
 	}
 	
+	[Authorize(Policy="UserOnly")]
 	[HttpGet("{id:int}")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -190,7 +193,7 @@ public class UserController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize(Roles = "Admin")]
+	[Authorize(Policy="AdminOrManager")]
 	[HttpPut("{id:int}")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -226,7 +229,7 @@ public class UserController : ControllerBase
 		}
 	}
 	
-	[Authorize(Roles = "User")]
+	[Authorize(Policy="UserOnly")]
 	[HttpPut("{id:int}/password")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -265,6 +268,35 @@ public class UserController : ControllerBase
 		catch (InvalidOperationException ex)
 		{
 			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred: {ex.Message}");
+		}
+	}
+
+	[Authorize(Policy = "AdminOnly")]
+	[HttpDelete("{id:int}")]
+	[ProducesResponseType((int)HttpStatusCode.NoContent)]
+	[ProducesResponseType((int)HttpStatusCode.NotFound)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<IActionResult> DeleteUser([FromRoute] int id)
+	{
+		if (id <= 0 || !int.TryParse(id.ToString(), out _))
+		{
+			return BadRequest("Invalid user ID.");
+		}
+		var command = new DeleteUserCommand(id);
+		try
+		{
+			await _mediator.Send(command);
+			return NoContent();
+		}
+		catch (UserNotFoundException ex)
+		{
+			return NotFound(ex.Message);
 		}
 		catch (Exception ex)
 		{
