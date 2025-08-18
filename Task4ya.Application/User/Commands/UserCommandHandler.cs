@@ -9,45 +9,36 @@ using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Application.User.Commands;
 
-public class UserCommandHandler : 
+public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository userRepository) :
 	IRequestHandler<AddUserCommand, UserDto>,
 	IRequestHandler<UpdateUserCommand, UserDto>,
 	IRequestHandler<UpdateUserPassword, UserDto>
 {
-	private readonly Task4YaDbContext _dbcontext;
-	private readonly IUserRepository _userRepository;
-	
-	public UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository userRepository)
-	{
-		_dbcontext = dbcontext;
-		_userRepository = userRepository;
-	}
-
 	public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 		var userPassword = PasswordHandler.HashPassword(request.Password);
 		var newUser = new Domain.Entities.User(request.Name, request.Email, userPassword);
-		if (await _userRepository.ExistsAsync(newUser.Email, cancellationToken))
+		if (await userRepository.ExistsAsync(newUser.Email, cancellationToken))
 		{
 			throw new InvalidOperationException($"User with email {newUser.Email} already exists.");
 		}
-		_dbcontext.Add(newUser);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		dbcontext.Add(newUser);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return newUser.MapToDto();
 	}
 
 	public async Task<UserDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
-		var user = await _userRepository.GetByIdAsync(request.Id);
+		var user = await userRepository.GetByIdAsync(request.Id);
 		if (user is null)
 		{
 			throw new UserNotFoundException($"User with ID {request.Id} does not exist.");
 		}
 		
 		user.UpdateUserDetails(request.NewName, request.NewEmail);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		
 		return user.MapToDto();
 	}
@@ -55,7 +46,7 @@ public class UserCommandHandler :
 	public async Task<UserDto> Handle(UpdateUserPassword request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
-		var user = await _userRepository.GetByIdAsync(request.Id);
+		var user = await userRepository.GetByIdAsync(request.Id);
 		if (user is null)
 		{
 			throw new UserNotFoundException($"User with ID {request.Id} does not exist.");
@@ -68,7 +59,7 @@ public class UserCommandHandler :
 		
 		var newPassword = PasswordHandler.HashPassword(request.NewPassword);
 		user.UpdatePassword(newPassword);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		
 		return user.MapToDto();
 	}

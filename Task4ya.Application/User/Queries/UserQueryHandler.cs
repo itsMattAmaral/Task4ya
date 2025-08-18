@@ -6,17 +6,12 @@ using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Application.User.Queries;
 
-public class UserQueryHandler : 
+public class UserQueryHandler(IUserRepository userRepository) :
 	IRequestHandler<GetAllUsersQuery, PagedResponseDto<UserDto>>,
 	IRequestHandler<GetUserByIdQuery, UserDto?>
 {
-	private readonly IUserRepository _userRepository;
-	
-	public UserQueryHandler(IUserRepository userRepository)
-	{
-		_userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-	}
-	
+	private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+
 	public async Task<PagedResponseDto<UserDto>> Handle(GetAllUsersQuery request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);

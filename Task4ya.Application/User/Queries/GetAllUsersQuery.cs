@@ -3,20 +3,4 @@ using Task4ya.Application.Dtos;
 
 namespace Task4ya.Application.User.Queries;
 
-public class GetAllUsersQuery : IRequest<PagedResponseDto<UserDto>>
-{
-	public int Page { get; set; }
-	public int PageSize { get; set; }
-	public string? SearchTerm { get; set; }
-	public string? SortBy { get; set; }
-	public bool SortDescending { get; set; } = false;
-	
-	public GetAllUsersQuery(int page = 1, int pageSize = 10, string? searchTerm = null, string? sortBy = null, bool sortDescending = false)
-	{
-		Page = page;
-		PageSize = pageSize;
-		SearchTerm = searchTerm;
-		SortBy = sortBy;
-		SortDescending = sortDescending;
-	}
-}
+public record GetAllUsersQuery(int Page = 1, int PageSize = 10, string? SearchTerm = null, string? SortBy = null, bool SortDescending = false) : IRequest<PagedResponseDto<UserDto>>;

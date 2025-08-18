@@ -7,34 +7,26 @@ using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Application.Board.Commands;
 
-public class BoardCommandHandler :
-	IRequestHandler<AddBoardCommand, BoardDto>,
-	IRequestHandler<DeleteBoardCommand>,
-	IRequestHandler<AddTaskItemToBoardCommand>,
-	IRequestHandler<UpdateBoardNameCommand, BoardDto>,
-	IRequestHandler<RemoveTaskItemToBoardCommand>
+public class BoardCommandHandler(
+	Task4YaDbContext dbcontext,
+	ITaskItemRepository taskItemRepository,
+	IBoardRepository boardRepository)
+	:
+		IRequestHandler<AddBoardCommand, BoardDto>,
+		IRequestHandler<DeleteBoardCommand>,
+		IRequestHandler<AddTaskItemToBoardCommand>,
+		IRequestHandler<UpdateBoardNameCommand, BoardDto>,
+		IRequestHandler<RemoveTaskItemToBoardCommand>
 {
-	private readonly Task4YaDbContext _dbcontext;
-	private readonly ITaskItemRepository _taskItemRepository;
-	private readonly IBoardRepository _boardRepository;
-
-	public BoardCommandHandler(Task4YaDbContext dbcontext, ITaskItemRepository taskItemRepository,
-		IBoardRepository boardRepository)
-	{
-		_dbcontext = dbcontext;
-		_taskItemRepository = taskItemRepository;
-		_boardRepository = boardRepository;
-	}
-
 	public async Task<BoardDto> Handle(AddBoardCommand request, CancellationToken cancellationToken)
 	{
 		var newBoard = new Domain.Entities.Board(request.Name);
-		_dbcontext.Add(newBoard);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		dbcontext.Add(newBoard);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 
 		foreach (var taskId in request.TaskItemIds)
 		{
-			var taskItem = await _taskItemRepository.GetByIdAsync(taskId);
+			var taskItem = await taskItemRepository.GetByIdAsync(taskId);
 
 			if (taskItem == null)
 			{
@@ -48,7 +40,7 @@ public class BoardCommandHandler :
 			taskItem.BoardId = newBoard.Id;
 			newBoard.AddTaskItem(taskItem);
 		}
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return newBoard.MapToDto();
 	}
 
@@ -56,13 +48,13 @@ public class BoardCommandHandler :
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+		var board = await boardRepository.GetByIdAsync(request.BoardId);
 
 		if (board == null)
 		{
 			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
 		}
-		var taskItem = await _taskItemRepository.GetByIdAsync(request.TaskItemId);
+		var taskItem = await taskItemRepository.GetByIdAsync(request.TaskItemId);
 
 		if (taskItem == null)
 		{
@@ -81,14 +73,14 @@ public class BoardCommandHandler :
 
 		taskItem.BoardId = board.Id;
 		board.AddTaskItem(taskItem);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 	}
 
 	public async Task<BoardDto> Handle(UpdateBoardNameCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+		var board = await boardRepository.GetByIdAsync(request.BoardId);
 
 		if (board == null)
 		{
@@ -99,14 +91,14 @@ public class BoardCommandHandler :
 			throw new InvalidOperationException(
 				$"Board with ID {request.BoardId} already has the name '{request.NewName}'.");
 		}
-		var isNewNameUnique = await _boardRepository.IsNameUniqueAsync(request.NewName, request.BoardId);
+		var isNewNameUnique = await boardRepository.IsNameUniqueAsync(request.NewName, request.BoardId);
 		if (!isNewNameUnique)
 		{
 			throw new InvalidOperationException($"Board name '{request.NewName}' is already in use.");
 		}
 		
 		board.RenameBoard(request.NewName);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		return board.MapToDto();
 	}
 
@@ -114,7 +106,7 @@ public class BoardCommandHandler :
 	{
 		ArgumentNullException.ThrowIfNull(request);
 
-		var board = await _boardRepository.GetByIdAsync(request.BoardId);
+		var board = await boardRepository.GetByIdAsync(request.BoardId);
 
 		if (board == null)
 		{
@@ -125,7 +117,7 @@ public class BoardCommandHandler :
 		{
 			throw new InvalidOperationException($"TaskItem with ID {request.TaskItemId} does not exist in the board.");
 		}
-		var taskItem = await _taskItemRepository.GetByIdAsync(request.TaskItemId);
+		var taskItem = await taskItemRepository.GetByIdAsync(request.TaskItemId);
 
 		if (taskItem == null)
 		{
@@ -139,13 +131,13 @@ public class BoardCommandHandler :
 		}
 		board.RemoveTaskItem(taskItem);
 		taskItem.BoardId = 0;
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 	}
 
 	public async Task Handle(DeleteBoardCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
-		var board = await _boardRepository.GetByIdAsync(request.Id);
+		var board = await boardRepository.GetByIdAsync(request.Id);
 
 		if (board == null)
 		{
@@ -159,11 +151,11 @@ public class BoardCommandHandler :
 			foreach (var taskItem in taskItems)
 			{
 				taskItem.BoardId = 0;
-				await _taskItemRepository.UpdateAsync(taskItem);
+				await taskItemRepository.UpdateAsync(taskItem);
 			}
 			board.ClearTaskItems();
 		}
-		await _boardRepository.DeleteAsync(request.Id);
-		await _dbcontext.SaveChangesAsync(cancellationToken);
+		await boardRepository.DeleteAsync(request.Id);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 	}
 }

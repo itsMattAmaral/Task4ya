@@ -5,19 +5,13 @@ using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Application.Board.Queries;
 
-public class BoardQueryHandler : 
-	IRequestHandler<GetAllBoardsQuery, PagedResponseDto<BoardDto>>,
-	IRequestHandler<GetBoardByIdQuery, BoardDto?>
+public class BoardQueryHandler(IBoardRepository boardRepository)
+	:
+		IRequestHandler<GetAllBoardsQuery, PagedResponseDto<BoardDto>>,
+		IRequestHandler<GetBoardByIdQuery, BoardDto?>
 {
-	private readonly IBoardRepository _boardRepository;
-	private readonly ITaskItemRepository _taskItemRepository;
-	
-	public BoardQueryHandler(IBoardRepository boardRepository, ITaskItemRepository taskItemRepository)
-	{
-		_boardRepository = boardRepository ?? throw new ArgumentNullException(nameof(boardRepository));
-		_taskItemRepository = taskItemRepository ?? throw new ArgumentNullException(nameof(taskItemRepository));
-	}
-	
+	private readonly IBoardRepository _boardRepository = boardRepository ?? throw new ArgumentNullException(nameof(boardRepository));
+
 	public async Task<PagedResponseDto<BoardDto>> Handle(GetAllBoardsQuery request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);

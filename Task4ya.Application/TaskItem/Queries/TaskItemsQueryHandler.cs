@@ -5,16 +5,11 @@ using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Application.TaskItem.Queries;
 
-public class TaskItemsQueryHandler : 
+public class TaskItemsQueryHandler(ITaskItemRepository taskItemRepository) :
 	IRequestHandler<GetAllTaskItemsQuery, PagedResponseDto<TaskItemDto>>,
 	IRequestHandler<GetTaskItemByIdQuery, TaskItemDto?>
 {
-	private readonly ITaskItemRepository _taskItemRepository;
-
-	public TaskItemsQueryHandler(ITaskItemRepository taskItemRepository)
-	{
-		_taskItemRepository = taskItemRepository ?? throw new ArgumentNullException(nameof(taskItemRepository));
-	}
+	private readonly ITaskItemRepository _taskItemRepository = taskItemRepository ?? throw new ArgumentNullException(nameof(taskItemRepository));
 
 	public async Task<PagedResponseDto<TaskItemDto>> Handle(GetAllTaskItemsQuery request, CancellationToken cancellationToken)
 	{
