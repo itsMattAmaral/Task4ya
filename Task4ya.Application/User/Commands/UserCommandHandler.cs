@@ -14,6 +14,7 @@ public class UserCommandHandler(Task4YaDbContext dbcontext, IUserRepository user
 	IRequestHandler<UpdateUserCommand, UserDto>,
 	IRequestHandler<AddRoleToUserCommand, UserDto>,
 	IRequestHandler<RemoveRoleToUserCommand, UserDto>,
+	IRequestHandler<DeleteUserCommand>,
 	IRequestHandler<UpdateUserPassword, UserDto>
 {
 	public async Task<UserDto> Handle(AddUserCommand request, CancellationToken cancellationToken)

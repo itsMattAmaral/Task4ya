@@ -7,16 +7,11 @@ using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Api.Helpers;
 
-public class AuthHelpers
+public class AuthHelpers(IUserRepository userRepository, IConfiguration configuration)
 {
-	private readonly IUserRepository _userRepository;
-	private readonly IConfiguration _configuration;
+	private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+	private readonly IConfiguration _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
-	public AuthHelpers(IUserRepository userRepository, IConfiguration configuration)
-	{
-		_userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-		_configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-	}
 	public string GenerateJwtToken(User? user)
 	{
 		if (user == null)
@@ -26,9 +21,9 @@ public class AuthHelpers
 		
 		var claims = new List<Claim>
 		{
-			new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-			new Claim(ClaimTypes.Name, user.Name),
-			new Claim(ClaimTypes.Email, user.Email)
+			new (ClaimTypes.NameIdentifier, user.Id.ToString()),
+			new (ClaimTypes.Name, user.Name),
+			new (ClaimTypes.Email, user.Email)
 			
 		};
 		claims.AddRange(user.Roles.Select(role => role.ToString()).Select(roleName => new Claim(ClaimTypes.Role, roleName)));

@@ -169,7 +169,7 @@ public class UserController : ControllerBase
 		return Ok(result);
 	}
 	
-	[Authorize(Policy="AnyUser")]
+	[Authorize(Policy = "AnyUser")]
 	[HttpGet("{id:int}")]
 	[ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.NotFound)]

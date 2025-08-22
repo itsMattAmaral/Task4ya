@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -87,7 +88,7 @@ public static class ServiceCollectionExtensions
 				ValidateIssuer = false,
 				ValidateAudience = false,
 				ClockSkew = TimeSpan.Zero,
-				RoleClaimType = "role"
+				RoleClaimType = ClaimTypes.Role
 			};
 		});
 		

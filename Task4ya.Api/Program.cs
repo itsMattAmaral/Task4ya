@@ -19,7 +19,7 @@ namespace Task4ya.Api;
 			
 			var app = builder.Build();
 
-			app.ConfigurePipeline(app.Environment);
+			app = app.ConfigurePipeline(app.Environment);
 			
 			using (var scope = app.Services.CreateScope())
 			{
