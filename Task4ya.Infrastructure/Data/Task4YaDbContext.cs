@@ -38,6 +38,9 @@ public class Task4YaDbContext(DbContextOptions<Task4YaDbContext> options) : DbCo
 		modelBuilder.Entity<Board>(entity =>
 		{
 			entity.HasKey(e => e.Id);
+			entity.Property(e => e.OwnerId).IsRequired();
+			entity.Property(e => e.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+			entity.Property(e => e.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 			entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
 			entity.HasMany(e => e.TaskGroup)
 				.WithMany()

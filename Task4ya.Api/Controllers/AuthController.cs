@@ -24,6 +24,7 @@ public class AuthController(AuthHelpers authHelpers) : ControllerBase
 		{
 			return BadRequest("Invalid login request.");
 		}
+		model.Email = model.Email.ToLower();
 		var user = await _authHelpers.GetUserByEmailAsync(model.Email);
 		if (user == null) throw new UserNotFoundException($"User with email {model.Email} not found.");
 		var isPasswordValid = PasswordHandler.VerifyPassword(model.Password, user.Password);
