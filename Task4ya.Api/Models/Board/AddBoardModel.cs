@@ -9,10 +9,15 @@ public class AddBoardModel
 	[MaxLength(100, ErrorMessage = "Board name cannot exceed 100 characters.")]
 	[MinLength(3, ErrorMessage = "Board name must be at least 3 characters long.")]
 	public string Name { get; set; } = "New Board";
+	[Display(Name = "Task Item IDs")]
 	public List<int> TaskItemIds { get; set; } = [];
+	[Required(ErrorMessage = "OwnerId is required.")]
+	[Range(1, int.MaxValue, ErrorMessage = "OwnerId must be a positive integer.")]
+	[Display(Name = "Owner ID")]
+	public int OwnerId { get; set; }
 	
 	public AddBoardCommand GetCommand()
 	{
-		return new AddBoardCommand(TaskItemIds, Name);
+		return new AddBoardCommand(OwnerId, TaskItemIds, Name);
 	}
 }

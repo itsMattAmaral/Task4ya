@@ -11,6 +11,9 @@ public static class BoardMapper
 		return new BoardDto
 		{
 			Id = board.Id,
+			OwnerId = board.OwnerId,
+			CreatedAt = board.CreatedAt,
+			UpdatedAt = board.UpdatedAt,
 			Name = board.Name,
 			TaskGroup = board.TaskGroup.Select(task=> task.MapToDto()).ToList()
 		};

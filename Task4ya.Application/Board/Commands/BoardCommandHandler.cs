@@ -10,20 +10,24 @@ namespace Task4ya.Application.Board.Commands;
 public class BoardCommandHandler(
 	Task4YaDbContext dbcontext,
 	ITaskItemRepository taskItemRepository,
+	IUserRepository userRepository,
 	IBoardRepository boardRepository)
 	:
 		IRequestHandler<AddBoardCommand, BoardDto>,
 		IRequestHandler<DeleteBoardCommand>,
 		IRequestHandler<AddTaskItemToBoardCommand>,
 		IRequestHandler<UpdateBoardNameCommand, BoardDto>,
+		IRequestHandler<UpdateBoardOwnerCommand>,
 		IRequestHandler<RemoveTaskItemToBoardCommand>
 {
 	public async Task<BoardDto> Handle(AddBoardCommand request, CancellationToken cancellationToken)
 	{
-		var newBoard = new Domain.Entities.Board(request.Name);
-		dbcontext.Add(newBoard);
-		await dbcontext.SaveChangesAsync(cancellationToken);
-
+		var owner = await userRepository.GetByIdAsync(request.OwnerId);
+		if (owner == null)
+		{
+			throw new KeyNotFoundException($"User with ID {request.OwnerId} not found.");
+		}
+		var newBoard = new Domain.Entities.Board(request.OwnerId ,request.Name);
 		foreach (var taskId in request.TaskItemIds)
 		{
 			var taskItem = await taskItemRepository.GetByIdAsync(taskId);
@@ -40,6 +44,7 @@ public class BoardCommandHandler(
 			taskItem.BoardId = newBoard.Id;
 			newBoard.AddTaskItem(taskItem);
 		}
+		dbcontext.Add(newBoard);
 		await dbcontext.SaveChangesAsync(cancellationToken);
 		return newBoard.MapToDto();
 	}
@@ -156,6 +161,28 @@ public class BoardCommandHandler(
 			board.ClearTaskItems();
 		}
 		await boardRepository.DeleteAsync(request.Id);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+	}
+	
+	public async Task Handle(UpdateBoardOwnerCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+		var board = await boardRepository.GetByIdAsync(request.BoardId);
+		if (board == null)
+		{
+			throw new KeyNotFoundException($"Board with ID {request.BoardId} not found.");
+		}
+		if (board.OwnerId == request.NewOwnerId) 
+		{
+			throw new InvalidOperationException(
+				$"Board with ID {request.BoardId} already has the owner with ID {request.NewOwnerId}.");
+		}
+		var newOwner = await userRepository.GetByIdAsync(request.NewOwnerId);
+		if (newOwner == null)
+		{
+			throw new KeyNotFoundException($"User with ID {request.NewOwnerId} not found.");
+		}
+		board.ChangeOwner(request.NewOwnerId);
 		await dbcontext.SaveChangesAsync(cancellationToken);
 	}
 }

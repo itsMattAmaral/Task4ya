@@ -178,9 +178,50 @@ public class BoardController : ControllerBase
 			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while updating the board name: {ex.Message}");
 		}
 	}
+	[Authorize(Policy = "AdminOrManager")]
+	[HttpPut("ChangeOwner/{boardId:int}/{newOwnerId:int}")]
+	[ProducesResponseType((int)HttpStatusCode.NoContent)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<IActionResult> ChangeBoardOwner([FromRoute] int boardId, int newOwnerId)
+	{
+		if (boardId <= 0)
+		{
+			return BadRequest("Invalid board ID.");
+		}
+		if (newOwnerId <= 0)
+		{
+			return BadRequest("Invalid new owner ID.");
+		}
+		
+		var command = new UpdateBoardOwnerCommand(boardId, newOwnerId);
+		
+		try
+		{
+			await _mediator.Send(command);
+			return NoContent();
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (ArgumentException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while changing the board owner: {ex.Message}");
+		}
+	}
 	
 	[Authorize(Policy = "AdminOrManager")]
-	[HttpDelete("{id}")]
+	[HttpDelete("{id:int}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
