@@ -242,39 +242,4 @@ public class BoardController : ControllerBase
 		return NoContent();
 	}
 	
-	[Authorize(Policy = "AdminOrManager")]
-	[HttpDelete("RemoveTaskItemFromBoard")]
-	[ProducesResponseType((int)HttpStatusCode.NoContent)]
-	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<IActionResult> RemoveTaskItemFromBoard([FromBody] RemoveTaskItemToBoardModel? model)
-	{
-		if (model is null || model.BoardId <= 0 || model.TaskItemId <= 0)
-		{
-			return BadRequest("Invalid board or task item data. BoardId and TaskItemId must be greater than 0.");
-		}
-		
-		var command = model.GetCommand();
-		
-		try
-		{
-			await _mediator.Send(command);
-		}
-		catch (KeyNotFoundException ex)
-		{
-			return NotFound(ex.Message);
-		}
-		catch (InvalidOperationException ex)
-		{
-			return BadRequest(ex.Message);
-		}
-		catch (Exception ex)
-		{
-			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while removing the task item from the board: {ex.Message}");
-		}
-		
-		return NoContent();
-	}
-	
 }

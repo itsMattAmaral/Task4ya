@@ -278,6 +278,38 @@ public class TaskItemController : ControllerBase
 	}
 	
 	[Authorize(Policy = "AdminOrManager")]
+	[HttpPatch("{id}/boardId")]
+	[ProducesResponseType(typeof(TaskItemDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult> UpdateTaskBoardId([FromRoute] int id, [FromBody] UpdateTaskItemBoardIdModel model)
+	{
+		if (id <= 0 || model.NewBoardId <= 0)
+		{
+			return BadRequest("Invalid task item ID or board ID. Both must be greater than 0.");
+		}
+		
+		var command = model.GetCommand();
+		command.Id = id;
+
+		try
+		{
+			var result = await _mediator.Send(command);
+			return Ok(result);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError,
+				$"An error occurred while updating the task board ID: {ex.Message}");
+		}
+	}
+	
+	[Authorize(Policy = "AdminOrManager")]
 	[HttpDelete("{id}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]

@@ -19,6 +19,7 @@ public class TaskItemCommandHandler(
 		IRequestHandler<UpdateTaskStatusCommand, TaskItemDto>,
 		IRequestHandler<UpdateTaskPriorityCommand, TaskItemDto>,
 		IRequestHandler<UpdateTaskDueDateCommand, TaskItemDto?>,
+		IRequestHandler<UpdateTaskItemBoardIdCommand, TaskItemDto>,
 		IRequestHandler<UpdateTaskItemAssigneeToIdCommand, TaskItemDto>,
 		IRequestHandler<DeleteTaskItemCommand>
 {
@@ -83,6 +84,29 @@ public class TaskItemCommandHandler(
 			newAssigneeToId: validatedAssigneeId
 		);
 
+		await dbcontext.SaveChangesAsync(cancellationToken);
+		return task.MapToDto();
+	}
+	
+	public async Task<TaskItemDto> Handle(UpdateTaskItemBoardIdCommand request, CancellationToken cancellationToken)
+	{
+		ArgumentNullException.ThrowIfNull(request);
+		await ValidateBoardExists(request.NewBoardId);
+		var task = await taskItemRepository.GetByIdAsync(request.Id);
+		if (task == null)
+		{
+			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
+		}
+		if (task.BoardId == request.NewBoardId)
+		{
+			throw new InvalidOperationException($"Task with ID {request.Id} is already in board with ID {request.NewBoardId}.");
+		}
+		var oldBoard = await boardRepository.GetByIdAsync(task.BoardId);
+		oldBoard?.RemoveTaskItem(task);
+		await dbcontext.SaveChangesAsync(cancellationToken);
+		var newBoard = await boardRepository.GetByIdAsync(request.NewBoardId);
+		task.BoardId = request.NewBoardId;
+		newBoard?.AddTaskItem(task);
 		await dbcontext.SaveChangesAsync(cancellationToken);
 		return task.MapToDto();
 	}
