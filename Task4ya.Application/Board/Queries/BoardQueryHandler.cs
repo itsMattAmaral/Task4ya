@@ -1,11 +1,14 @@
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using Task4ya.Application.Dtos;
+using Task4ya.Application.Helpers;
 using Task4ya.Application.Mappers;
+using Task4ya.Application.Services;
 using Task4ya.Domain.Repositories;
 
 namespace Task4ya.Application.Board.Queries;
 
-public class BoardQueryHandler(IBoardRepository boardRepository)
+public class BoardQueryHandler(IBoardRepository boardRepository, ICacheService cacheService, IConfiguration configuration)
 	:
 		IRequestHandler<GetAllBoardsQuery, PagedResponseDto<BoardDto>>,
 		IRequestHandler<GetBoardByIdQuery, BoardDto?>
@@ -16,15 +19,22 @@ public class BoardQueryHandler(IBoardRepository boardRepository)
 	{
 		ArgumentNullException.ThrowIfNull(request);
 		
-		var items = await _boardRepository.GetAllAsync(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending);
+		var cacheKey =
+			CacheKeyGenerator.GetBoardsKey(request.Page, request.PageSize, request.SortBy, request.SortDescending, request.SearchTerm);
+		var cachedBoards = await cacheService.GetAsync<PagedResponseDto<BoardDto>>(cacheKey);
+		if (cachedBoards != null) return cachedBoards;
 		
-		return new PagedResponseDto<BoardDto>
-		{
+		var items = await _boardRepository.GetAllAsync(request.Page, request.PageSize, request.SearchTerm, request.SortBy, request.SortDescending);
+		var boards = new PagedResponseDto<BoardDto>	{
 			Items = items.Select(board => board.MapToDto()),
 			TotalCount = await _boardRepository.GetCountAsync(request.SearchTerm),
 			Page = request.Page,
 			PageSize = request.PageSize
 		};
+		var expirationMinutes = int.TryParse(configuration["CacheSettings:BoardsCacheExpirationMinutes"], out var minutes) ? minutes : 60;
+		await cacheService.SetAsync(cacheKey, boards, TimeSpan.FromMinutes(expirationMinutes));
+
+		return boards;
 	}
 	
 	public async Task<BoardDto?> Handle(GetBoardByIdQuery request, CancellationToken cancellationToken)

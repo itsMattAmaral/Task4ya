@@ -3,7 +3,9 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using Task4ya.Api.Helpers;
+using Task4ya.Application.Services;
 using Task4ya.Domain.Repositories;
 using Task4ya.Infrastructure.Data;
 using Task4ya.Infrastructure.Repositories;
@@ -134,5 +136,23 @@ public static class ServiceCollectionExtensions
 			});
 		});
 
+	}
+
+	public static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
+	{
+		var redisConnectionString = configuration.GetConnectionString("Redis");
+		if (string.IsNullOrEmpty(redisConnectionString)) throw new InvalidOperationException("Redis connection string is not configured.");
+
+		// Register IConnectionMultiplexer as a singleton for direct Redis operations
+		services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+
+		services.AddStackExchangeRedisCache(options =>
+		{
+			options.Configuration = redisConnectionString;
+			options.InstanceName = "Task4ya_";
+		});
+
+		services.AddScoped<ICacheService, RedisCacheService>();
+		return services;
 	}
 }

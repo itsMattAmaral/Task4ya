@@ -8,10 +8,16 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Task4ya.Infrastructure\Task4ya.Infrastructure.csproj" />
+      <ProjectReference Include="..\Task4ya.Domain\Task4ya.Domain.csproj" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="MediatR" Version="12.5.0" />
+      <PackageReference Include="StackExchange.Redis" Version="2.9.17" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Common\" />
     </ItemGroup>
 
 </Project>

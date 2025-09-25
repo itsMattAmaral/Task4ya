@@ -1,5 +1,7 @@
 using MediatR;
 using Task4ya.Application.Board.Commands.Actions;
+using Task4ya.Application.Common.Commands;
+using Task4ya.Application.Helpers;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.Mappers;
 using Task4ya.Domain.Repositories;
@@ -11,7 +13,8 @@ public class BoardCommandHandler(
 	Task4YaDbContext dbcontext,
 	ITaskItemRepository taskItemRepository,
 	IUserRepository userRepository,
-	IBoardRepository boardRepository)
+	IBoardRepository boardRepository,
+	IMediator mediator)
 	:
 		IRequestHandler<AddBoardCommand, BoardDto>,
 		IRequestHandler<DeleteBoardCommand>,
@@ -27,7 +30,10 @@ public class BoardCommandHandler(
 		{
 			throw new KeyNotFoundException($"User with ID {request.OwnerId} not found.");
 		}
-		var newBoard = new Domain.Entities.Board(request.OwnerId ,request.Name);
+		var newBoard = new Domain.Entities.Board(request.OwnerId, request.Name);
+
+		dbcontext.Add(newBoard);
+		await dbcontext.SaveChangesAsync(cancellationToken);
 		foreach (var taskId in request.TaskItemIds)
 		{
 			var taskItem = await taskItemRepository.GetByIdAsync(taskId);
@@ -44,8 +50,12 @@ public class BoardCommandHandler(
 			taskItem.BoardId = newBoard.Id;
 			newBoard.AddTaskItem(taskItem);
 		}
-		dbcontext.Add(newBoard);
+
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return newBoard.MapToDto();
 	}
 
@@ -79,6 +89,10 @@ public class BoardCommandHandler(
 		taskItem.BoardId = board.Id;
 		board.AddTaskItem(taskItem);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 	}
 
 	public async Task<BoardDto> Handle(UpdateBoardNameCommand request, CancellationToken cancellationToken)
@@ -104,6 +118,10 @@ public class BoardCommandHandler(
 		
 		board.RenameBoard(request.NewName);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return board.MapToDto();
 	}
 
@@ -137,6 +155,10 @@ public class BoardCommandHandler(
 		board.RemoveTaskItem(taskItem);
 		taskItem.BoardId = 0;
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 	}
 
 	public async Task Handle(DeleteBoardCommand request, CancellationToken cancellationToken)
@@ -162,6 +184,10 @@ public class BoardCommandHandler(
 		}
 		await boardRepository.DeleteAsync(request.Id);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 	}
 	
 	public async Task Handle(UpdateBoardOwnerCommand request, CancellationToken cancellationToken)
@@ -184,5 +210,14 @@ public class BoardCommandHandler(
 		}
 		board.ChangeOwner(request.NewOwnerId);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
+	}
+
+	private async Task InvalidateCachesAsync(string[] keys, string[] patterns, CancellationToken cancellationToken)
+	{
+		await mediator.Send(new InvalidateCacheCommand { Keys = keys, Patterns = patterns }, cancellationToken);
 	}
 }
