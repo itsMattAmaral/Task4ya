@@ -1,5 +1,7 @@
 using MediatR;
+using Task4ya.Application.Common.Commands;
 using Task4ya.Application.Dtos;
+using Task4ya.Application.Helpers;
 using Task4ya.Application.Mappers;
 using Task4ya.Application.TaskItem.Commands.Actions;
 using Task4ya.Domain.Exceptions;
@@ -12,7 +14,8 @@ public class TaskItemCommandHandler(
 	Task4YaDbContext dbcontext,
 	IBoardRepository boardRepository,
 	IUserRepository userRepository,
-	ITaskItemRepository taskItemRepository)
+	ITaskItemRepository taskItemRepository,
+	IMediator mediator)
 	:
 		IRequestHandler<AddTaskItemCommand, TaskItemDto>,
 		IRequestHandler<UpdateTaskItemCommand, TaskItemDto>,
@@ -51,6 +54,10 @@ public class TaskItemCommandHandler(
 		var board = await boardRepository.GetByIdAsync(request.BoardId);
 		board?.AddTaskItem(newTask);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return newTask.MapToDto();
 	}
 	
@@ -85,6 +92,10 @@ public class TaskItemCommandHandler(
 		);
 
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return task.MapToDto();
 	}
 	
@@ -108,6 +119,10 @@ public class TaskItemCommandHandler(
 		task.BoardId = request.NewBoardId;
 		newBoard?.AddTaskItem(task);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return task.MapToDto();
 	}
 
@@ -121,6 +136,10 @@ public class TaskItemCommandHandler(
 		}
 		task.UpdateStatus(request.Status);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return task.MapToDto();
 	}
 
@@ -134,6 +153,10 @@ public class TaskItemCommandHandler(
 		}
 		task.UpdatePriority(request.Priority);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return task.MapToDto();
 	}
 
@@ -146,6 +169,10 @@ public class TaskItemCommandHandler(
 		}
 		task.UpdateDueDate(request.DueDate);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return task.MapToDto();
 	}
 
@@ -161,6 +188,10 @@ public class TaskItemCommandHandler(
 		}
 		dbcontext.TaskItems.Remove(task);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
     }
 	
 	private async Task ValidateBoardExists(int boardId)
@@ -189,6 +220,15 @@ public class TaskItemCommandHandler(
 		
 		task.UpdateAssigneeToId(request.NewAssigneeId);
 		await dbcontext.SaveChangesAsync(cancellationToken);
+		await InvalidateCachesAsync(
+			Array.Empty<string>(), 
+			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			cancellationToken);
 		return task.MapToDto();
+	}
+	
+	private async Task InvalidateCachesAsync(string[] keys, string[] patterns, CancellationToken cancellationToken)
+	{
+		await mediator.Send(new InvalidateCacheCommand { Keys = keys, Patterns = patterns }, cancellationToken);
 	}
 }
