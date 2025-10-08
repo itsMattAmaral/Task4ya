@@ -155,4 +155,22 @@ public static class ServiceCollectionExtensions
 		services.AddScoped<ICacheService, RedisCacheService>();
 		return services;
 	}
+	
+	public static IServiceCollection AddQueueServices(this IServiceCollection services, IConfiguration configuration)
+	{
+		var redisConnectionString = configuration.GetConnectionString("Redis");
+		if (string.IsNullOrEmpty(redisConnectionString)) throw new InvalidOperationException("Redis connection string is not configured.");
+
+		// Register IConnectionMultiplexer as a singleton for direct Redis operations
+		services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+
+		services.AddScoped<IQueueService, RedisQueueService>();
+		return services;
+	}
+	
+	public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
+	{
+		services.AddHostedService<TaskItemQueueProcessorService>();
+		return services;
+	}
 }

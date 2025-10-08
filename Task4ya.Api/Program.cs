@@ -15,6 +15,8 @@ namespace Task4ya.Api;
 				.AddRepositories()
 				.AddMediatRServices()
 				.AddCachingServices(builder.Configuration)
+				.AddQueueServices(builder.Configuration)
+				.AddBackgroundServices()
 				.AddAuthenticationServices(builder.Configuration)
 				.AddSwaggerServices();
 			
