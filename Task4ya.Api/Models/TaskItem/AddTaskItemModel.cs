@@ -6,8 +6,7 @@ namespace Task4ya.Api.Models.TaskItem;
 
 public class AddTaskItemModel
 {
-	[Required(ErrorMessage = "Board ID is required.")]
-	public int BoardId { get; set; }
+	public int? BoardId { get; set; }
 	public int? AssigneeToId { get; set; } = null;
 	
 	[Required(ErrorMessage = "Title is required.")]

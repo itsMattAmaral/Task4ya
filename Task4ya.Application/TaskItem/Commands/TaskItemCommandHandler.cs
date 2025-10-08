@@ -112,9 +112,13 @@ public class TaskItemCommandHandler(
 		{
 			throw new InvalidOperationException($"Task with ID {request.Id} is already in board with ID {request.NewBoardId}.");
 		}
-		var oldBoard = await boardRepository.GetByIdAsync(task.BoardId);
-		oldBoard?.RemoveTaskItem(task);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+
+		if (task.BoardId is not null)
+		{
+			var oldBoard = await boardRepository.GetByIdAsync(task.BoardId);
+			oldBoard?.RemoveTaskItem(task);
+			await dbcontext.SaveChangesAsync(cancellationToken);
+		}
 		var newBoard = await boardRepository.GetByIdAsync(request.NewBoardId);
 		task.BoardId = request.NewBoardId;
 		newBoard?.AddTaskItem(task);
@@ -194,12 +198,12 @@ public class TaskItemCommandHandler(
 			cancellationToken);
     }
 	
-	private async Task ValidateBoardExists(int boardId)
+	private async Task ValidateBoardExists(int? boardId)
 	{
-		var board = await boardRepository.GetByIdAsync(boardId);
-		if (board == null)
+		if (boardId != null)
 		{
-			throw new KeyNotFoundException($"Board with ID {boardId} not found.");
+			var board = await boardRepository.GetByIdAsync(boardId);
+			if (board == null) throw new KeyNotFoundException($"Board with ID {boardId} not found.");
 		}
 	}
 

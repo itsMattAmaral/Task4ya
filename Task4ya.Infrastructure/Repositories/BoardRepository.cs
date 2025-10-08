@@ -14,8 +14,9 @@ public class BoardRepository : IBoardRepository
 		_dbContext = dbContext;
 	}
 	
-	public async Task<Board?> GetByIdAsync(int id)
+	public async Task<Board?> GetByIdAsync(int? id)
 	{
+		if (id == null) return null;
 		return await _dbContext.Boards
 			.Include(b => b.TaskGroup)
 			.FirstOrDefaultAsync(b => b.Id == id);

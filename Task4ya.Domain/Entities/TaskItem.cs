@@ -5,7 +5,7 @@ namespace Task4ya.Domain.Entities;
 public class TaskItem
 {
 	public int Id { get; init; }
-	public int BoardId { get; set; }
+	public int? BoardId { get; set; }
 	public string Title { get; set; }
 	public string? Description { get; set; }
 	public int? AssigneeToId { get; set; }
@@ -15,7 +15,7 @@ public class TaskItem
 	public TaskItemStatus Status { get; set; }
 	public TaskItemPriority Priority { get; set; }
 
-	public TaskItem(int boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending, int? assigneeToId = null)
+	public TaskItem(int? boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending, int? assigneeToId = null)
 	{
 		StringValidator.ThrowIfNullOrWhiteSpace(title, "Title");
 		BoardId = boardId;

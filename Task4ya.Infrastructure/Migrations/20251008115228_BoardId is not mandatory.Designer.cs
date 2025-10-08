@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Task4ya.Infrastructure.Data;
@@ -11,9 +12,11 @@ using Task4ya.Infrastructure.Data;
 namespace Task4ya.Infrastructure.Migrations
 {
     [DbContext(typeof(Task4YaDbContext))]
-    partial class Task4YaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251008115228_BoardId is not mandatory")]
+    partial class BoardIdisnotmandatory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

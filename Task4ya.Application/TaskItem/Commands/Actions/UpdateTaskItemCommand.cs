@@ -6,7 +6,7 @@ namespace Task4ya.Application.TaskItem.Commands.Actions;
 
 public record UpdateTaskItemCommand(
 	int Id,
-	int BoardId,
+	int? BoardId,
 	string? Title = null,
 	string? Description = null,
 	DateTime? DueDate = null,

@@ -5,7 +5,7 @@ using Task4ya.Domain.Enums;
 namespace Task4ya.Application.TaskItem.Commands.Actions;
 
 public record AddTaskItemCommand(
-	int BoardId,
+	int? BoardId,
 	string Title,
 	string? Description = null,
 	DateTime? DueDate = null,

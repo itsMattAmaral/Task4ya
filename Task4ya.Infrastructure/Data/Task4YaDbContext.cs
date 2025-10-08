@@ -23,7 +23,7 @@ public class Task4YaDbContext(DbContextOptions<Task4YaDbContext> options) : DbCo
 			entity.Property(e => e.Status).IsRequired();
 			entity.Property(e => e.Priority).IsRequired();
 			entity.Property(e => e.AssigneeToId);
-			entity.Property(e => e.BoardId);
+			entity.Property(e => e.BoardId).IsRequired(false);
 			entity.HasOne<User>()
 				.WithMany()
 				.HasForeignKey(e => e.AssigneeToId)
