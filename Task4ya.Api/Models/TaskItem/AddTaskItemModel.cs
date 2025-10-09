@@ -17,6 +17,7 @@ public class AddTaskItemModel
 	public string Title { get; set; } = string.Empty;
 	
 	[MaxLength(2000, ErrorMessage = "Description cannot exceed 2000 characters.")]
+	[RegularExpression(@"^[a-zA-Z0-9\s']+$", ErrorMessage = "Description can only contain letters, numbers, spaces and apostrophes.")]
 	[Display(Name = "Task Description")]
 	public string? Description { get; set; }
 	

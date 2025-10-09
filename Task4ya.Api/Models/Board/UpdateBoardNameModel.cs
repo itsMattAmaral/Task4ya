@@ -8,6 +8,7 @@ public class UpdateBoardNameModel
 	[Display(Name = "Board Name")]
 	[MaxLength(100, ErrorMessage = "Board name cannot exceed 100 characters.")]
 	[MinLength(3, ErrorMessage = "Board name must be at least 3 characters long.")]
+	[RegularExpression(@"^[a-zA-Z0-9\s']+$", ErrorMessage = "Board name can only contain letters, numbers, spaces and apostrophes.")]
 	public string NewName { get; set; } = "New Board";
 
 	public UpdateBoardNameCommand GetCommand(int id)
