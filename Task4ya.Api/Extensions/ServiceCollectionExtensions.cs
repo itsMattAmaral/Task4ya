@@ -41,9 +41,9 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddRepositories(this IServiceCollection services)
 	{
 		services.AddScoped<AuthHelpers>();
+		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IBoardRepository, BoardRepository>();
 		services.AddScoped<ITaskItemRepository, TaskItemRepository>();
-		services.AddScoped<IUserRepository, UserRepository>();
 		
 		return services;
 	}
@@ -171,6 +171,7 @@ public static class ServiceCollectionExtensions
 	public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
 	{
 		services.AddHostedService<TaskItemQueueProcessorService>();
+		services.AddHostedService<BoardsQueueProcessorService>();
 		return services;
 	}
 }

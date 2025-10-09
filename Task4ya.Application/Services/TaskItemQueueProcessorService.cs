@@ -67,11 +67,6 @@ public class TaskItemQueueProcessorService : BackgroundService
 		foreach (var queueName in queueNames)
 		{
 			var queueLength = await queueService.GetQueueLengthAsync(queueName);
-			if (queueLength == 0)
-			{
-				_logger.LogInformation("No tasks in the queue to process.");
-				continue;
-			}
 			_logger.LogInformation("Processing {QueueLength} tasks from the queue: {Queue}.", queueLength, queueName);
 			for (var i = 0; i < queueLength; i++)
 			{

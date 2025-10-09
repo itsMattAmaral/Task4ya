@@ -55,18 +55,18 @@ public class BoardController : ControllerBase
 	}
 	
 	[Authorize(Policy = "AdminOrManager")]
-	[HttpPost("AddTaskItemToBoard")]
+	[HttpPost("{boardId:int}/AddTaskItemToBoard")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<IActionResult> AddTaskItemToBoard([FromBody] AddTaskItemToBoardModel? model)
+	public async Task<IActionResult> AddTaskItemToBoard([FromRoute] int boardId, [FromBody] AddTaskItemToBoardModel? model)
 	{
-		if (model is null || model.BoardId <= 0 || model.TaskItemId <= 0)
+		if (model is null || boardId <= 0 || model.TaskItemId <= 0)
 		{
 			return BadRequest("Invalid board or task item data. BoardId and TaskItemId must be greater than 0.");
 		}
-		var command = model.GetCommand();
+		var command = model.GetCommand(boardId);
 
 		try
 		{
@@ -179,7 +179,7 @@ public class BoardController : ControllerBase
 		}
 	}
 	[Authorize(Policy = "AdminOrManager")]
-	[HttpPut("ChangeOwner/{boardId:int}/{newOwnerId:int}")]
+	[HttpPut("{boardId:int}/ChangeOwner/{newOwnerId:int}")]
 	[ProducesResponseType((int)HttpStatusCode.NoContent)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]

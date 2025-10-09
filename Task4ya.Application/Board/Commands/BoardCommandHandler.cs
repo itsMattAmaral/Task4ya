@@ -4,6 +4,7 @@ using Task4ya.Application.Common.Commands;
 using Task4ya.Application.Helpers;
 using Task4ya.Application.Dtos;
 using Task4ya.Application.Mappers;
+using Task4ya.Application.Services;
 using Task4ya.Domain.Repositories;
 using Task4ya.Infrastructure.Data;
 
@@ -14,6 +15,7 @@ public class BoardCommandHandler(
 	ITaskItemRepository taskItemRepository,
 	IUserRepository userRepository,
 	IBoardRepository boardRepository,
+	IQueueService queueService,
 	IMediator mediator)
 	:
 		IRequestHandler<AddBoardCommand, BoardDto>,
@@ -32,29 +34,31 @@ public class BoardCommandHandler(
 		}
 		var newBoard = new Domain.Entities.Board(request.OwnerId, request.Name);
 
-		dbcontext.Add(newBoard);
-		await dbcontext.SaveChangesAsync(cancellationToken);
-		foreach (var taskId in request.TaskItemIds)
+		if (request.TaskItemIds.Count > 0)
 		{
-			var taskItem = await taskItemRepository.GetByIdAsync(taskId);
-
-			if (taskItem == null)
+			foreach (var taskId in request.TaskItemIds)
 			{
-				throw new KeyNotFoundException($"TaskItem with ID {taskId} not found.");
-			}
-			if (taskItem.BoardId != 0)
-			{
-				throw new InvalidOperationException($"TaskItem with ID {taskId} already belongs to another board.");
-			}
+				var taskItem = await taskItemRepository.GetByIdAsync(taskId);
 
-			taskItem.BoardId = newBoard.Id;
-			newBoard.AddTaskItem(taskItem);
+				if (taskItem == null)
+				{
+					throw new KeyNotFoundException($"TaskItem with ID {taskId} not found.");
+				}
+
+				if (taskItem.BoardId != 0)
+				{
+					throw new InvalidOperationException($"TaskItem with ID {taskId} already belongs to another board.");
+				}
+
+				taskItem.BoardId = newBoard.Id;
+				newBoard.AddTaskItem(taskItem);
+			}
 		}
 
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("boards-add-queue", newBoard);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 		return newBoard.MapToDto();
 	}
@@ -117,10 +121,10 @@ public class BoardCommandHandler(
 		}
 		
 		board.RenameBoard(request.NewName);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("boards-update-queue", board);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 		return board.MapToDto();
 	}
@@ -182,11 +186,10 @@ public class BoardCommandHandler(
 			}
 			board.ClearTaskItems();
 		}
-		await boardRepository.DeleteAsync(request.Id);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("boards-delete-queue", board);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 	}
 	
@@ -209,10 +212,10 @@ public class BoardCommandHandler(
 			throw new KeyNotFoundException($"User with ID {request.NewOwnerId} not found.");
 		}
 		board.ChangeOwner(request.NewOwnerId);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("boards-update-queue", board);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 	}
 

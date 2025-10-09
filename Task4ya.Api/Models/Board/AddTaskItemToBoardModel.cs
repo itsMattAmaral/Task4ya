@@ -5,13 +5,11 @@ namespace Task4ya.Api.Models.Board;
 
 public class AddTaskItemToBoardModel
 {
-	[Required(ErrorMessage = "Board ID is required.")]
-	public int BoardId { get; set; }
 	[Required(ErrorMessage = "Task Item ID is required.")]
 	public int TaskItemId { get; set; }
 	
-	public AddTaskItemToBoardCommand GetCommand()
+	public AddTaskItemToBoardCommand GetCommand(int boardId)
 	{
-		return new AddTaskItemToBoardCommand(BoardId, TaskItemId);
+		return new AddTaskItemToBoardCommand(boardId, TaskItemId);
 	}
 }
