@@ -6,12 +6,10 @@ using Task4ya.Application.Dtos;
 using Task4ya.Application.Mappers;
 using Task4ya.Application.Services;
 using Task4ya.Domain.Repositories;
-using Task4ya.Infrastructure.Data;
 
 namespace Task4ya.Application.Board.Commands;
 
 public class BoardCommandHandler(
-	Task4YaDbContext dbcontext,
 	ITaskItemRepository taskItemRepository,
 	IUserRepository userRepository,
 	IBoardRepository boardRepository,
@@ -51,6 +49,7 @@ public class BoardCommandHandler(
 				}
 
 				taskItem.BoardId = newBoard.Id;
+				await queueService.EnqueueAsync("taskitems-update-queue", taskItem);
 				newBoard.AddTaskItem(taskItem);
 			}
 		}
@@ -91,11 +90,14 @@ public class BoardCommandHandler(
 		}
 
 		taskItem.BoardId = board.Id;
+		await queueService.EnqueueAsync("taskitems-update-queue", taskItem);
+		
 		board.AddTaskItem(taskItem);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("boards-update-queue", board);
+		
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 	}
 
@@ -144,6 +146,8 @@ public class BoardCommandHandler(
 		{
 			throw new InvalidOperationException($"TaskItem with ID {request.TaskItemId} does not exist in the board.");
 		}
+		
+		
 		var taskItem = await taskItemRepository.GetByIdAsync(request.TaskItemId);
 
 		if (taskItem == null)
@@ -156,12 +160,16 @@ public class BoardCommandHandler(
 			throw new InvalidOperationException(
 				$"TaskItem with ID {request.TaskItemId} does not belong to the board with ID {request.BoardId}.");
 		}
+		
 		board.RemoveTaskItem(taskItem);
-		taskItem.BoardId = 0;
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("boards-update-queue", board);
+		
+		taskItem.BoardId = null;
+		await queueService.EnqueueAsync("taskitems-update-queue", board);
+		
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 	}
 
@@ -181,8 +189,8 @@ public class BoardCommandHandler(
 
 			foreach (var taskItem in taskItems)
 			{
-				taskItem.BoardId = 0;
-				await taskItemRepository.UpdateAsync(taskItem);
+				taskItem.BoardId = null;
+				await queueService.EnqueueAsync("taskitems-update-queue", taskItem);
 			}
 			board.ClearTaskItems();
 		}

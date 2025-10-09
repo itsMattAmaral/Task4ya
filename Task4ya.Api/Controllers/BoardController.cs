@@ -20,6 +20,63 @@ public class BoardController : ControllerBase
 	{
 		_mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 	}
+    
+	[Authorize(Policy = "AnyUser")]
+	[HttpGet]
+	[ProducesResponseType(typeof(PagedResponseDto<BoardDto>), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<PagedResponseDto<BoardDto>>> GetAllBoards(
+		[FromQuery] int page = 1, 
+		[FromQuery] int pageSize = 10, 
+		[FromQuery] string? searchTerm = null, 
+		[FromQuery] string? sortBy = null, 
+		[FromQuery] bool sortDescending = false)
+	{
+		if (page < 1 || pageSize < 1)
+		{
+			return BadRequest("Page and PageSize must be greater than 0.");
+		}
+		if (sortBy != null && !SourceArray.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
+		{
+			return BadRequest("Invalid sortBy parameter. Allowed values are: Name, CreatedAt.");
+		}
+		if (sortDescending && sortBy == null)
+		{
+			return BadRequest("sortDescending can only be true if sortBy is specified.");
+		}
+		if (searchTerm is {Length: > 100})
+		{
+			return BadRequest("Search term cannot exceed 100 characters.");
+		}
+		var query = new GetAllBoardsQuery(page, pageSize, searchTerm, sortBy, sortDescending);
+		var result = await _mediator.Send(query);
+		return Ok(result);
+	}
+	
+	[Authorize(Policy = "AnyUser")]
+	[HttpGet("{id:int}")]
+	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<ActionResult<BoardDto>> GetBoardById(int id)
+	{
+		if (id <= 0)
+		{
+			return BadRequest("Invalid board ID.");
+		}
+
+		var query = new GetBoardByIdQuery(id);
+		var result = await _mediator.Send(query);
+		if (result is null)
+		{
+			return NotFound($"Board with ID {id} not found.");
+		}
+		
+		return Ok(result);
+	}
 	
 	[Authorize(Policy = "AdminOrManager")]
 	[HttpPost]
@@ -88,77 +145,20 @@ public class BoardController : ControllerBase
 		return NoContent();
 	}
 	
-	[Authorize(Policy = "AnyUser")]
-	[HttpGet]
-	[ProducesResponseType(typeof(PagedResponseDto<BoardDto>), (int)HttpStatusCode.OK)]
-	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<PagedResponseDto<BoardDto>>> GetAllBoards(
-		[FromQuery] int page = 1, 
-		[FromQuery] int pageSize = 10, 
-		[FromQuery] string? searchTerm = null, 
-		[FromQuery] string? sortBy = null, 
-		[FromQuery] bool sortDescending = false)
-	{
-		if (page < 1 || pageSize < 1)
-		{
-			return BadRequest("Page and PageSize must be greater than 0.");
-		}
-		if (sortBy != null && !SourceArray.Contains(sortBy, StringComparer.OrdinalIgnoreCase))
-		{
-			return BadRequest("Invalid sortBy parameter. Allowed values are: Name, CreatedAt.");
-		}
-		if (sortDescending && sortBy == null)
-		{
-			return BadRequest("sortDescending can only be true if sortBy is specified.");
-		}
-		if (searchTerm is {Length: > 100})
-		{
-			return BadRequest("Search term cannot exceed 100 characters.");
-		}
-		var query = new GetAllBoardsQuery(page, pageSize, searchTerm, sortBy, sortDescending);
-		var result = await _mediator.Send(query);
-		return Ok(result);
-	}
-	
-	[Authorize(Policy = "AnyUser")]
-	[HttpGet("{id}")]
+	[Authorize(Policy = "AdminOrManager")]
+	[HttpPut("{id:int}")]
 	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
 	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
 	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
 	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<BoardDto>> GetBoardById(int id)
+	public async Task<ActionResult<BoardDto>> UpdateBoardName([FromRoute] int id, [FromBody] UpdateBoardNameModel model)
 	{
 		if (id <= 0)
 		{
 			return BadRequest("Invalid board ID.");
 		}
-
-		var query = new GetBoardByIdQuery(id);
-		var result = await _mediator.Send(query);
-		if (result is null)
-		{
-			return NotFound($"Board with ID {id} not found.");
-		}
 		
-		return Ok(result);
-	}
-	
-	[Authorize(Policy = "AdminOrManager")]
-	[HttpPut("{id}")]
-	[ProducesResponseType(typeof(BoardDto), (int)HttpStatusCode.OK)]
-	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-	public async Task<ActionResult<BoardDto>> UpdateBoardName([FromRoute] int id, [FromBody] UpdateBoardNameModel? model)
-	{
-		if (id <= 0 || model is null || string.IsNullOrWhiteSpace(model.NewName))
-		{
-			return BadRequest("Invalid board ID or name.");
-		}
-		
-		var command = new UpdateBoardNameCommand(id, model.NewName);
+		var command = model.GetCommand(id);
 		
 		try
 		{
@@ -242,4 +242,37 @@ public class BoardController : ControllerBase
 		return NoContent();
 	}
 	
+	[Authorize(Policy = "AdminOrManager")]
+	[HttpDelete("{boardId:int}/RemoveTaskItemFromBoard")]
+	[ProducesResponseType((int)HttpStatusCode.NoContent)]
+	[ProducesResponseType((int)HttpStatusCode.BadRequest)]
+	[ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+	[ProducesResponseType((int)HttpStatusCode.InternalServerError)]
+	public async Task<IActionResult> RemoveTaskItemFromBoard([FromRoute]int boardId, [FromBody] RemoveTaskItemToBoardModel model)
+	{
+		if (model.TaskItemId <= 0)
+		{
+			return BadRequest("Invalid task item data. TaskItemId must be greater than 0.");
+		}
+		var command = model.GetCommand(boardId);
+
+		try
+		{
+			await _mediator.Send(command);
+		}
+		catch (KeyNotFoundException ex)
+		{
+			return NotFound(ex.Message);
+		}
+		catch (InvalidOperationException ex)
+		{
+			return BadRequest(ex.Message);
+		}
+		catch (Exception ex)
+		{
+			return StatusCode((int)HttpStatusCode.InternalServerError, $"An error occurred while removing the task item from the board: {ex.Message}");
+		}
+		
+		return NoContent();
+	}
 }

@@ -147,6 +147,14 @@ public class BoardsQueueProcessorService : BackgroundService
 
 		existingBoard.RenameBoard(boardFromQueue.Name);
 		if (existingBoard.OwnerId != boardFromQueue.OwnerId) existingBoard.ChangeOwner(boardFromQueue.OwnerId);
+		if (existingBoard.TaskGroup.Count != boardFromQueue.TaskGroup.Count)
+		{
+			existingBoard.TaskGroup.Clear();
+			foreach (var taskItem in boardFromQueue.TaskGroup)
+			{
+				existingBoard.AddTaskItem(taskItem);
+			}
+		}
 		await dbContext.SaveChangesAsync(cancellationToken);
 		_logger.LogInformation("Updated board with ID {BoardId} in the database.", boardFromQueue.Id);
 	}

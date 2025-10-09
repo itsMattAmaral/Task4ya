@@ -7,12 +7,9 @@ using Task4ya.Application.Services;
 using Task4ya.Application.TaskItem.Commands.Actions;
 using Task4ya.Domain.Exceptions;
 using Task4ya.Domain.Repositories;
-using Task4ya.Infrastructure.Data;
-
 namespace Task4ya.Application.TaskItem.Commands;
 
 public class TaskItemCommandHandler(
-	Task4YaDbContext dbcontext,
 	IBoardRepository boardRepository,
 	IUserRepository userRepository,
 	ITaskItemRepository taskItemRepository,
@@ -121,15 +118,18 @@ public class TaskItemCommandHandler(
 		{
 			var oldBoard = await boardRepository.GetByIdAsync(task.BoardId);
 			oldBoard?.RemoveTaskItem(task);
-			await dbcontext.SaveChangesAsync(cancellationToken);
+			await queueService.EnqueueAsync("Boards-update-queue", oldBoard);
 		}
 		var newBoard = await boardRepository.GetByIdAsync(request.NewBoardId);
+		
 		task.BoardId = request.NewBoardId;
+		await queueService.EnqueueAsync("taskitems-update-queue", task);
+		
 		newBoard?.AddTaskItem(task);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("Boards-update-queue", newBoard);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 		return task.MapToDto();
 	}
@@ -143,10 +143,10 @@ public class TaskItemCommandHandler(
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
 		task.UpdateStatus(request.Status);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("taskitems-update-queue", task);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 		return task.MapToDto();
 	}
@@ -160,10 +160,10 @@ public class TaskItemCommandHandler(
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
 		task.UpdatePriority(request.Priority);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("taskitems-update-queue", task);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 		return task.MapToDto();
 	}
@@ -176,7 +176,7 @@ public class TaskItemCommandHandler(
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
 		task.UpdateDueDate(request.DueDate);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("taskitems-update-queue", task);
 		await InvalidateCachesAsync(
 			[],
 			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 
@@ -194,21 +194,19 @@ public class TaskItemCommandHandler(
 		{
 			throw new KeyNotFoundException($"Task with ID {request.Id} not found.");
 		}
+		if (task.BoardId is not null)
+		{
+			var board = await boardRepository.GetByIdAsync(task.BoardId);
+			board?.RemoveTaskItem(task);
+			await queueService.EnqueueAsync("boards-update-queue", board);
+		}
+		
 		await queueService.EnqueueAsync("taskitems-delete-queue", task);
 		await InvalidateCachesAsync(
 			[],
 			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
     }
-	
-	private async Task ValidateBoardExists(int? boardId)
-	{
-		if (boardId != null)
-		{
-			var board = await boardRepository.GetByIdAsync(boardId);
-			if (board == null) throw new KeyNotFoundException($"Board with ID {boardId} not found.");
-		}
-	}
 
 	public async Task<TaskItemDto> Handle(UpdateTaskItemAssigneeToIdCommand request, CancellationToken cancellationToken)
 	{
@@ -226,10 +224,10 @@ public class TaskItemCommandHandler(
 		if (!assigneeExists) throw new UserNotFoundException("Assignee with the specified ID does not exist.");
 		
 		task.UpdateAssigneeToId(request.NewAssigneeId);
-		await dbcontext.SaveChangesAsync(cancellationToken);
+		await queueService.EnqueueAsync("taskitems-update-queue", task);
 		await InvalidateCachesAsync(
-			Array.Empty<string>(), 
-			new[] {CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix}, 
+			[],
+			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 
 			cancellationToken);
 		return task.MapToDto();
 	}
@@ -237,5 +235,14 @@ public class TaskItemCommandHandler(
 	private async Task InvalidateCachesAsync(string[] keys, string[] patterns, CancellationToken cancellationToken)
 	{
 		await mediator.Send(new InvalidateCacheCommand { Keys = keys, Patterns = patterns }, cancellationToken);
+	}
+	
+	private async Task ValidateBoardExists(int? boardId)
+	{
+		if (boardId != null)
+		{
+			var board = await boardRepository.GetByIdAsync(boardId);
+			if (board == null) throw new KeyNotFoundException($"Board with ID {boardId} not found.");
+		}
 	}
 }
