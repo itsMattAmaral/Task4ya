@@ -6,14 +6,14 @@ namespace Task4ya.Api.Models.TaskItem;
 
 public class AddTaskItemModel
 {
-	public int? BoardId { get; set; }
+	public int? BoardId { get; set; } = null;
 	public int? AssigneeToId { get; set; } = null;
 	
 	[Required(ErrorMessage = "Title is required.")]
 	[MaxLength(100, ErrorMessage = "Title cannot exceed 100 characters.")]
 	[MinLength(5, ErrorMessage = "Title must be at least 5 characters long.")]
 	[Display(Name = "Task Title")]
-	[RegularExpression(@"^[a-zA-Z0-9\s]+$", ErrorMessage = "Title can only contain letters, numbers, and spaces.")]
+	[RegularExpression(@"^[a-zA-Z0-9\s']+$", ErrorMessage = "Title can only contain letters, numbers, spaces and apostrophes.")]
 	public string Title { get; set; } = string.Empty;
 	
 	[MaxLength(2000, ErrorMessage = "Description cannot exceed 2000 characters.")]
