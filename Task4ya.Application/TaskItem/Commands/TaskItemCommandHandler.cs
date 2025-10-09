@@ -118,7 +118,7 @@ public class TaskItemCommandHandler(
 		{
 			var oldBoard = await boardRepository.GetByIdAsync(task.BoardId);
 			oldBoard?.RemoveTaskItem(task);
-			await queueService.EnqueueAsync("Boards-update-queue", oldBoard);
+			await queueService.EnqueueAsync("boards-update-queue", oldBoard);
 		}
 		var newBoard = await boardRepository.GetByIdAsync(request.NewBoardId);
 		
@@ -126,7 +126,7 @@ public class TaskItemCommandHandler(
 		await queueService.EnqueueAsync("taskitems-update-queue", task);
 		
 		newBoard?.AddTaskItem(task);
-		await queueService.EnqueueAsync("Boards-update-queue", newBoard);
+		await queueService.EnqueueAsync("boards-update-queue", newBoard);
 		await InvalidateCachesAsync(
 			[],
 			[CacheKeyGenerator.TaskitemsPrefix, CacheKeyGenerator.BoardsPrefix], 

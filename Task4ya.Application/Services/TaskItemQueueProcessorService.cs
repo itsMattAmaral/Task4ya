@@ -76,6 +76,12 @@ public class TaskItemQueueProcessorService : BackgroundService
 					_logger.LogWarning("Dequeued a null task item.");
 					continue;
 				}
+				
+				if (string.IsNullOrWhiteSpace(taskItemFromQueue.Title))
+				{
+					_logger.LogWarning("Task item with ID {TaskItemId} has an empty title. Skipping.", taskItemFromQueue.Id);
+					continue;
+				}
 			
 				try
 				{

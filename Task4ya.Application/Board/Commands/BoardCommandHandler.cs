@@ -65,7 +65,7 @@ public class BoardCommandHandler(
 	public async Task Handle(AddTaskItemToBoardCommand request, CancellationToken cancellationToken)
 	{
 		ArgumentNullException.ThrowIfNull(request);
-
+		
 		var board = await boardRepository.GetByIdAsync(request.BoardId);
 
 		if (board == null)
@@ -84,7 +84,7 @@ public class BoardCommandHandler(
 			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already exists in the board.");
 		}
 
-		if (taskItem.BoardId != 0)
+		if (taskItem.BoardId is not null && taskItem.BoardId != 0)
 		{
 			throw new InvalidOperationException($"TaskItem with ID {taskItem.Id} already belongs to another board.");
 		}
@@ -165,7 +165,7 @@ public class BoardCommandHandler(
 		await queueService.EnqueueAsync("boards-update-queue", board);
 		
 		taskItem.BoardId = null;
-		await queueService.EnqueueAsync("taskitems-update-queue", board);
+		await queueService.EnqueueAsync("taskitems-update-queue", taskItem);
 		
 		await InvalidateCachesAsync(
 			[],

@@ -147,12 +147,36 @@ public class BoardsQueueProcessorService : BackgroundService
 
 		existingBoard.RenameBoard(boardFromQueue.Name);
 		if (existingBoard.OwnerId != boardFromQueue.OwnerId) existingBoard.ChangeOwner(boardFromQueue.OwnerId);
-		if (existingBoard.TaskGroup.Count != boardFromQueue.TaskGroup.Count)
+		
+		var incomingTaskIds = boardFromQueue.TaskGroup.Select(t => t.Id).ToHashSet();
+		
+		foreach (var taskItem in existingBoard.TaskGroup.ToList().Where(taskItem => !incomingTaskIds.Contains(taskItem.Id)))
 		{
-			existingBoard.TaskGroup.Clear();
-			foreach (var taskItem in boardFromQueue.TaskGroup)
+			existingBoard.RemoveTaskItem(taskItem);
+		}
+		
+		foreach (var taskItem in boardFromQueue.TaskGroup)
+		{
+			var existingTask = existingBoard.TaskGroup.FirstOrDefault(t => t.Id == taskItem.Id);
+    
+			if (existingTask != null)
 			{
-				existingBoard.AddTaskItem(taskItem);
+				dbContext.Entry(existingTask).CurrentValues.SetValues(taskItem);
+			}
+			else
+			{
+				var trackedTask = dbContext.TaskItems.Local.FirstOrDefault(t => t.Id == taskItem.Id);
+        
+				if (trackedTask != null)
+				{
+					dbContext.Entry(trackedTask).CurrentValues.SetValues(taskItem);
+					existingBoard.AddTaskItem(trackedTask);
+				}
+				else
+				{
+					dbContext.TaskItems.Update(taskItem);
+					existingBoard.AddTaskItem(taskItem);
+				}
 			}
 		}
 		await dbContext.SaveChangesAsync(cancellationToken);
