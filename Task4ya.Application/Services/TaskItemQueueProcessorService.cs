@@ -144,6 +144,7 @@ public class TaskItemQueueProcessorService : BackgroundService
 			_logger.LogWarning("Task item with ID {TaskItemId} does not exist. Cannot update.", taskItem.Id);
 			return;
 		}
+		existingTask.UpdateBoardId(taskItem.BoardId);
 		existingTask.UpdateTaskItem(
 			taskItem.BoardId,
 			taskItem.Title,
@@ -152,7 +153,7 @@ public class TaskItemQueueProcessorService : BackgroundService
 			taskItem.Priority,
 			taskItem.Status,
 			taskItem.AssigneeToId
-			);
+		);
 		await dbContext.SaveChangesAsync(cancellationToken);
 		_logger.LogInformation("Successfully updated task item with ID {TaskItemId} from queue in database.", taskItem.Id);
 	}

@@ -74,7 +74,7 @@ public class TaskItem
 		UpdatedAt = DateTime.UtcNow;
 	}
 	
-	private void UpdateBoardId(int newBoardId)
+	public void UpdateBoardId(int? newBoardId)
 	{
 		BoardId = newBoardId;
 		UpdatedAt = DateTime.UtcNow;

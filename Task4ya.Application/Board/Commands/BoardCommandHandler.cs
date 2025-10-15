@@ -164,7 +164,7 @@ public class BoardCommandHandler(
 		board.RemoveTaskItem(taskItem);
 		await queueService.EnqueueAsync("boards-update-queue", board);
 		
-		taskItem.BoardId = null;
+		taskItem.UpdateBoardId(null);
 		await queueService.EnqueueAsync("taskitems-update-queue", taskItem);
 		
 		await InvalidateCachesAsync(
@@ -189,7 +189,7 @@ public class BoardCommandHandler(
 
 			foreach (var taskItem in taskItems)
 			{
-				taskItem.BoardId = null;
+				taskItem.UpdateBoardId(null);
 				await queueService.EnqueueAsync("taskitems-update-queue", taskItem);
 			}
 			board.ClearTaskItems();
