@@ -73,7 +73,7 @@ dotnet run
    docker compose up --build -d
    ```
 5. Access the API:
-   - Swagger UI: [https://localhost:8443/swagger](https://localhost:8443/swagger)
+   - Swagger UI: [https://localhost:8443](https://localhost:8443)
    - API: [https://localhost:8443](https://localhost:8443)
 
 > **Note:** You may see a browser warning for the self-signed certificate. This is expected for development.
