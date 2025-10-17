@@ -7,7 +7,6 @@ public class Task4YaDbContext(DbContextOptions<Task4YaDbContext> options) : DbCo
 {
 	public DbSet<TaskItem> TaskItems => Set<TaskItem>();
 	public DbSet<Board> Boards => Set<Board>();
-	
 	public DbSet<User> Users => Set<User>();
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)

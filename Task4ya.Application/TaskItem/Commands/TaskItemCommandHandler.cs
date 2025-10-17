@@ -38,8 +38,9 @@ public class TaskItemCommandHandler(
 				throw new UserNotFoundException($"User with ID {request.AssigneeToId} does not exist.");
 			validatedAssigneeId = request.AssigneeToId.Value;
 		}
-		
+		var newTaskId = await queueService.IncrementAsync("taskitem:next_id");
 		var newTask = new Domain.Entities.TaskItem(
+			newTaskId,
 			request.BoardId,
 			request.Title,
 			request.Description,

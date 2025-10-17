@@ -15,9 +15,10 @@ public class TaskItem
 	public TaskItemStatus Status { get; set; }
 	public TaskItemPriority Priority { get; set; }
 
-	public TaskItem(int? boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending, int? assigneeToId = null)
+	public TaskItem(int id, int? boardId, string title, string? description = null, DateTime? dueDate = null, TaskItemPriority priority = TaskItemPriority.Medium, TaskItemStatus status = TaskItemStatus.Pending, int? assigneeToId = null)
 	{
 		StringValidator.ThrowIfNullOrWhiteSpace(title, "Title");
+		Id = id;
 		BoardId = boardId;
 		Title = title;
 		Description = description;

@@ -2,9 +2,9 @@ using Task4ya.Domain.Utils;
 
 namespace Task4ya.Domain.Entities;
 
-public class Board(int ownerId, string name = "New Board")
+public class Board(int id, int ownerId, string name = "New Board")
 {
-	public int Id { get; init; }
+	public int Id { get; init; } = id;
 	public string Name { get; set; } = name;
 	public int OwnerId {get; set;} = ownerId;
 	public ICollection<TaskItem> TaskGroup { get; init; } = new List<TaskItem>();

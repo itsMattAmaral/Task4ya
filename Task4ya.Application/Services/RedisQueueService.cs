@@ -33,4 +33,9 @@ public class RedisQueueService(IConnectionMultiplexer connectionMultiplexer)
 	{
 		await _database.ListLeftPopAsync(queueName);
 	}
+	
+	public async Task<int> IncrementAsync(string key)
+	{
+		return (int)await _database.StringIncrementAsync(key);
+	}
 }

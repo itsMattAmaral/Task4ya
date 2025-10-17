@@ -11,7 +11,7 @@ public class User(string name, string email, string password)
 	public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 	public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 	
-	public List<Roles> Roles { get; init; } = [Enums.Roles.User];
+	public List<Roles> Roles { get; set; } = [Enums.Roles.User];
 
 	public void UpdateUserName(string newName)
 	{

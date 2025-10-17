@@ -30,8 +30,16 @@ public class BoardCommandHandler(
 		{
 			throw new KeyNotFoundException($"User with ID {request.OwnerId} not found.");
 		}
-		var newBoard = new Domain.Entities.Board(request.OwnerId, request.Name);
-
+		var isNameUnique = await boardRepository.IsNameUniqueAsync(request.Name);
+		if (!isNameUnique) 
+		{
+			throw new InvalidOperationException($"Board name '{request.Name}' is already in use.");
+		}
+		
+		var newBoardId = await queueService.IncrementAsync("board:next_id");
+		var newBoard = new Domain.Entities.Board(newBoardId, request.OwnerId, request.Name);
+		
+		
 		if (request.TaskItemIds.Count > 0)
 		{
 			foreach (var taskId in request.TaskItemIds)
