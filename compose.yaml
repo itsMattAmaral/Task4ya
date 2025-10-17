@@ -18,6 +18,25 @@
       restart: unless-stopped
       ports:
         - "6379:6379"
+    
+    api:
+      build: ./
+      container_name: Task4ya.API
+      restart: unless-stopped
+      ports:
+        - "8000:8000"
+        - "8443:8443"
+      volumes:
+        - ./https/aspnetapp.pfx:/https/aspnetapp.pfx:ro
+      environment:
+        ASPNETCORE_URLS: "http://+:8000;https://+:8443"
+        ASPNETCORE_Kestrel__Certificates__Default__Password: "task4ya"
+        ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/aspnetapp.pfx"
+        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+        REDIS_URL: redis://redis:6379
+      depends_on:
+        - postgres
+        - redis
 
 volumes:
   pgdata:

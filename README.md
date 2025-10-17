@@ -33,96 +33,62 @@ Task4ya/
 
 - .NET 8 SDK
 - PostgreSQL database
-- Docker (optional, for containerization)
+- Docker & Docker Compose
 
 ## Getting Started
 
-### Database Setup
+### Database Setup (Manual)
 
 1. Install PostgreSQL
 2. Create a new database called `Task4ya`
 3. Update the connection string in `appsettings.json`
 
-### Running the Application
+### Running the Application (Manual)
 
 ```bash
 # Clone the repository
 git clone https://github.com/itsMattAmaral/Task4ya.git
 cd Task4ya
-
-# Build the solution
-dotnet build
-
-# Run migrations
-dotnet ef database update --project Task4ya.Infrastructure --startup-project Task4ya.Api
-
-# Run the application
+# Restore dependencies and run
 cd Task4ya.Api
+dotnet restore
 dotnet run
 ```
 
-The API will be available at `https://localhost:5001` or `http://localhost:5000`
+### Running with Docker Compose
 
-## API Endpoints
+1. Ensure Docker and Docker Compose are installed.
+2. Generate a self-signed HTTPS certificate:
+   ```bash
+   dotnet dev-certs https -ep ./https/aspnetapp.pfx -p task4ya
+   ```
+3. Create a `.env` file in the project root with your database credentials:
+   ```env
+   POSTGRES_USER=task4ya_user_admin
+   POSTGRES_PASSWORD=password123
+   POSTGRES_DB=Task4ya
+   ```
+4. Start all services:
+   ```bash
+   docker compose up --build -d
+   ```
+5. Access the API:
+   - Swagger UI: [https://localhost:8443/swagger](https://localhost:8443/swagger)
+   - API: [https://localhost:8443](https://localhost:8443)
 
-### Authentication
+> **Note:** You may see a browser warning for the self-signed certificate. This is expected for development.
 
-- `POST /api/Auth/register` - Register a new user
-- `POST /api/Auth/login` - Login and get JWT token
+## Environment Variables
 
-### Boards
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`: Set in `.env` for database setup
+- `ASPNETCORE_URLS`: Set to `http://+:8000;https://+:8443` for Docker Compose
+- `ASPNETCORE_Kestrel__Certificates__Default__Path`: Path to the HTTPS certificate
+- `ASPNETCORE_Kestrel__Certificates__Default__Password`: Password for the certificate
 
-- `GET /api/Board` - Get all boards
-- `GET /api/Board/{id}` - Get board by ID
-- `POST /api/Board` - Create a new board
-- `PUT /api/Board/{id}` - Update a board
-- `DELETE /api/Board/{id}` - Delete a board
+## Migrations
 
-### Tasks
-
-- `GET /api/TaskItem` - Get all tasks (with pagination, sorting, filtering)
-- `GET /api/TaskItem/{id}` - Get task by ID
-- `POST /api/TaskItem` - Create a new task
-- `PUT /api/TaskItem/{id}` - Update a task
-- `PATCH /api/TaskItem/{id}/status` - Update task status
-- `PATCH /api/TaskItem/{id}/priority` - Update task priority
-- `PATCH /api/TaskItem/{id}/DueDate` - Update task due date
-- `PATCH /api/TaskItem/{id}/assignee` - Update task assignee
-- `DELETE /api/TaskItem/{id}` - Delete a task
-
-## Authentication
-
-All endpoints except for login and register require authentication using JWT Bearer token:
-
-```
-Authorization: Bearer <your_token>
-```
-
-## Error Handling
-
-The API returns appropriate HTTP status codes:
-
-- `200 OK` - Success
-- `201 Created` - Resource created
-- `400 Bad Request` - Invalid input
-- `401 Unauthorized` - Authentication required
-- `404 Not Found` - Resource not found
-- `500 Internal Server Error` - Server error
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Entity Framework Core migrations are applied automatically at startup.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Built with ASP.NET Core and Entity Framework Core
-- Uses MediatR for implementing the CQRS pattern
-- Uses clean architecture principles for maintainability and testability
+MIT

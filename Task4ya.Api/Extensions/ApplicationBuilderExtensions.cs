@@ -4,7 +4,7 @@ public static class ApplicationBuilderExtensions
 {
 	public static WebApplication ConfigurePipeline(this WebApplication app, IHostEnvironment env)
 	{
-		if (env.IsDevelopment())
+		if (env.IsDevelopment() || env.IsProduction())
 		{
 			app.UseSwagger();
 			app.UseSwaggerUI(options =>
